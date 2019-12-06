@@ -10,10 +10,10 @@
 
 const USHORT gOEMVendorID = 0x7379;    // "sy"
 const USHORT gOEMProductID = 0x726D;    // "rm"
-const USHORT gOEMVersionID = 3400;
+const USHORT gOEMVersionID = 3200;
 
 const PWSTR gpwstrManufacturerID = L"Synaptics";
-const PWSTR gpwstrProductID = L"3400";
+const PWSTR gpwstrProductID = L"3200";
 const PWSTR gpwstrSerialNumber = L"4";
 
 NTSTATUS
@@ -27,7 +27,7 @@ RmiGetTouchesFromController(
 Routine Description:
 
     This routine reads raw touch messages from hardware. If there is
-    no touch data available (if a non-touch interrupt fired), the 
+    no touch data available (if a non-touch interrupt fired), the
     function will not return success and no touch data was transferred.
 
 Arguments:
@@ -44,14 +44,11 @@ Return Value:
 {
     NTSTATUS status;
     RMI4_CONTROLLER_CONTEXT* controller;
+    int index, i;
+    int fingerStatus[RMI4_MAX_TOUCHES] = { 0 };
+    int highestSlot;
 
-    int index, i, x, y, fingers;
-
-	BYTE fingerStatus[RMI4_MAX_TOUCHES] = { 0 };
-	BYTE* data1;
-	BYTE* controllerData;
-
-    controller = (RMI4_CONTROLLER_CONTEXT*) ControllerContext;
+    controller = (RMI4_CONTROLLER_CONTEXT*)ControllerContext;
 
     //
     // Locate RMI data base address of 2D touch function
@@ -59,14 +56,12 @@ Return Value:
     index = RmiGetFunctionIndex(
         controller->Descriptors,
         controller->FunctionCount,
-        RMI4_F12_2D_TOUCHPAD_SENSOR);
+        RMI4_F11_2D_TOUCHPAD_SENSOR);
 
     if (index == controller->FunctionCount)
     {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_INIT,
-            "Unexpected - RMI Function 12 missing");
+        DbgPrint(
+            "Unexpected - RMI Function 11 missing\n");
 
         status = STATUS_INVALID_DEVICE_STATE;
         goto exit;
@@ -79,103 +74,86 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_INIT,
-            "Could not change register page");
+        DbgPrint(
+            "Could not change register page\n");
 
         goto exit;
     }
 
-	controllerData = ExAllocatePoolWithTag(
-		NonPagedPoolNx,
-		controller->PacketSize,
-		TOUCH_POOL_TAG_F12
-	);
+    //
+    // Read finger statuses first, to determine how much data we need to read
+    // 
+    status = SpbReadDataSynchronously(
+        SpbContext,
+        controller->Descriptors[index].DataBase,
+        &Data->Status,
+        sizeof(RMI4_F11_DATA_REGISTERS_STATUS_BLOCK));
 
-	if (controllerData == NULL)
-	{
-		status = STATUS_INSUFFICIENT_RESOURCES;
-		goto exit;
-	}
+    if (!NT_SUCCESS(status))
+    {
+        DbgPrint(
+            "Error reading finger status data - %x\n",
+            status);
 
-	// 
-	// Packets we need is determined by context
-	//
-	status = SpbReadDataSynchronously(
-		SpbContext,
-		controller->Descriptors[index].DataBase,
-		controllerData,
-		(ULONG) controller->PacketSize
-	);
+        goto exit;
+    }
 
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INTERRUPT,
-			"Error reading finger status data - %!STATUS!",
-			status);
+    fingerStatus[0] = Data->Status.FingerState0;
+    fingerStatus[1] = Data->Status.FingerState1;
+    fingerStatus[2] = Data->Status.FingerState2;
+    fingerStatus[3] = Data->Status.FingerState3;
+    fingerStatus[4] = Data->Status.FingerState4;
+    fingerStatus[5] = Data->Status.FingerState5;
+    fingerStatus[6] = Data->Status.FingerState6;
+    fingerStatus[7] = Data->Status.FingerState7;
+    fingerStatus[8] = Data->Status.FingerState8;
+    fingerStatus[9] = Data->Status.FingerState9;
 
-		goto free_buffer;
-	}
+    //
+    // Compute the last slot containing data of interest
+    //
+    highestSlot = 0;
 
-	data1 = &controllerData[controller->Data1Offset];
-	fingers = 0;
+    for (i = 0; i < RMI4_MAX_TOUCHES; i++)
+    {
+        //
+        // Find the highest slot we know has finger data
+        //
+        if (controller->Cache.FingerSlotValid & (1 << i))
+        {
+            highestSlot = i;
+        }
+    }
 
-	if (data1 != NULL)
-	{
-		for (i = 0; i < controller->MaxFingers; i++)
-		{
-			switch (data1[0]) 
-			{
-			case RMI_F12_OBJECT_FINGER:
-			case RMI_F12_OBJECT_STYLUS:
-				fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
-				fingers++;
-				break;
-			default:
-				fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-				break;
-			}
+    for (i = highestSlot + 1; i < RMI4_MAX_TOUCHES; i++)
+    {
+        //
+        // New fingers in higher slots may need to be read
+        //
+        if (fingerStatus[i])
+        {
+            highestSlot = i;
+        }
+    }
 
-			x = (data1[2] << 8) | data1[1];
-			y = (data1[4] << 8) | data1[3];
+    //
+    // Read as much finger position data as we need to
+    //
+    status = SpbReadDataSynchronously(
+        SpbContext,
+        controller->Descriptors[index].DataBase +
+        sizeof(RMI4_F11_DATA_REGISTERS_STATUS_BLOCK),
+        &Data->Finger[0],
+        sizeof(RMI4_F11_DATA_POSITION) * (highestSlot + 1));
 
-			Data->Finger[i].X = x;
-			Data->Finger[i].Y = y;
+    if (!NT_SUCCESS(status))
+    {
+        DbgPrint(
+            "Error reading finger status data - %x\n",
+            status);
 
-			data1 += F12_DATA1_BYTES_PER_OBJ;
-		}
-	}
-	else
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INTERRUPT,
-			"Error reading finger status data - empty buffer"
-		);
-
-		goto free_buffer;
-	}
-
-	// Synchronize status back
-	Data->Status.FingerState0 = fingerStatus[0];
-	Data->Status.FingerState1 = fingerStatus[1];
-	Data->Status.FingerState2 = fingerStatus[2];
-	Data->Status.FingerState3 = fingerStatus[3];
-	Data->Status.FingerState4 = fingerStatus[4];
-	Data->Status.FingerState5 = fingerStatus[5];
-	Data->Status.FingerState6 = fingerStatus[6];
-	Data->Status.FingerState7 = fingerStatus[7];
-	Data->Status.FingerState8 = fingerStatus[8];
-	Data->Status.FingerState9 = fingerStatus[9];
-
-free_buffer:
-	ExFreePoolWithTag(
-		controllerData,
-		TOUCH_POOL_TAG_F12
-	);
+        goto exit;
+    }
 
 exit:
     return status;
@@ -260,7 +238,7 @@ Return Value:
         // we just decrement the list total by one. If it was not last, we
         // shift the trailing list items up by one.
         //
-        for (; (j<Cache->FingerDownCount-1) && (j<RMI4_MAX_TOUCHES-1); j++)
+        for (; j<Cache->FingerDownCount-1; j++)
         {
             Cache->FingerDownOrder[j] = Cache->FingerDownOrder[j+1];
         }
@@ -281,8 +259,7 @@ Return Value:
         // Take actions when a new contact is first reported as down
         //
         if ((fingerStatus[i] != RMI4_FINGER_STATE_NOT_PRESENT) &&
-            ((Cache->FingerSlotValid & (1 << i)) == 0) &&
-            (Cache->FingerDownCount < RMI4_MAX_TOUCHES))
+            ((Cache->FingerSlotValid & (1 << i)) == 0))
         {
             Cache->FingerSlotValid |= (1 << i);
             Cache->FingerDownOrder[Cache->FingerDownCount++] = i;
@@ -301,10 +278,12 @@ Return Value:
         // the controller. When finger is up, we'll use last cached value
         //
         Cache->FingerSlot[i].fingerStatus = (UCHAR) fingerStatus[i];
-        if (Cache->FingerSlot[i].fingerStatus)
+        if (fingerStatus[i])
         {
-            Cache->FingerSlot[i].x = Data->Finger[i].X;
-            Cache->FingerSlot[i].y = Data->Finger[i].Y;
+            Cache->FingerSlot[i].x = (Data->Finger[i].XPosLo & 0xF) |
+                ((Data->Finger[i].XPosHi & 0xFF) << 4);
+            Cache->FingerSlot[i].y = (Data->Finger[i].YPosLo & 0xF) |
+                ((Data->Finger[i].YPosHi & 0xFF) << 4);
         }
 
         //

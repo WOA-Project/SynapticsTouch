@@ -350,7 +350,7 @@ RmiReadRegisterDescriptor(
 	Rdesc->Registers = ExAllocatePoolWithTag(
 		NonPagedPoolNx,
 		Rdesc->NumRegisters * sizeof(RMI_REGISTER_DESC_ITEM),
-		TOUCH_POOL_TAG_F12
+		TOUCH_POOL_TAG_F11
 	);
 
 	if (Rdesc->Registers == NULL)
@@ -367,7 +367,7 @@ RmiReadRegisterDescriptor(
 	struct_buf = ExAllocatePoolWithTag(
 		NonPagedPoolNx,
 		Rdesc->StructSize,
-		TOUCH_POOL_TAG_F12
+		TOUCH_POOL_TAG_F11
 	);
 
 	if (struct_buf == NULL)
@@ -443,7 +443,7 @@ RmiReadRegisterDescriptor(
 free_buffer:
 	ExFreePoolWithTag(
 		struct_buf,
-		TOUCH_POOL_TAG_F12
+		TOUCH_POOL_TAG_F11
 	);
 
 exit:
@@ -539,18 +539,13 @@ RmiConfigureFunctions(
 
     RMI4_F01_CTRL_REGISTERS controlF01 = {0};
 
-	BYTE queryF12Addr = 0;
-	char buf;
-	USHORT data_offset = 0;
-	PRMI_REGISTER_DESC_ITEM item;
-
     //
     // Find 2D touch sensor function and configure it
     //
     index = RmiGetFunctionIndex(
         ControllerContext->Descriptors,
         ControllerContext->FunctionCount,
-        RMI4_F12_2D_TOUCHPAD_SENSOR);
+        RMI4_F11_2D_TOUCHPAD_SENSOR);
 
     if (index == ControllerContext->FunctionCount)
     {
@@ -577,131 +572,6 @@ RmiConfigureFunctions(
 
         goto exit;
     }
-
-	// Retrieve base address for queries
-	queryF12Addr = ControllerContext->Descriptors[index].QueryBase;
-	status = SpbReadDataSynchronously(
-		SpbContext,
-		queryF12Addr,
-		&buf,
-		sizeof(char)
-	);
-
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Failed to read general info register - %!STATUS!",
-			status);
-		goto exit;
-	}
-
-	++queryF12Addr;
-
-	if (!(buf & BIT(0))) 
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Behavior of F12 without register descriptors is undefined."
-		);
-		
-		status = STATUS_INVALID_PARAMETER;
-		goto exit;
-	}
-
-	ControllerContext->HasDribble = !!(buf & BIT(3));
-
-	status = RmiReadRegisterDescriptor(
-		SpbContext,
-		queryF12Addr,
-		&ControllerContext->QueryRegDesc
-	);
-
-	if (!NT_SUCCESS(status)) {
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Failed to read the Query Register Descriptor - %!STATUS!",
-			status);
-		goto exit;
-	}
-	queryF12Addr += 3;
-
-	status = RmiReadRegisterDescriptor(
-		SpbContext,
-		queryF12Addr,
-		&ControllerContext->ControlRegDesc
-	);
-
-	if (!NT_SUCCESS(status)) {
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Failed to read the Control Register Descriptor - %!STATUS!",
-			status);
-		goto exit;
-	}
-	queryF12Addr += 3;
-
-	status = RmiReadRegisterDescriptor(
-		SpbContext,
-		queryF12Addr,
-		&ControllerContext->DataRegDesc
-	);
-
-	if (!NT_SUCCESS(status)) {
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Failed to read the Data Register Descriptor - %!STATUS!",
-			status);
-		goto exit;
-	}
-	queryF12Addr += 3;
-	ControllerContext->PacketSize = RmiRegisterDescriptorCalcSize(
-		&ControllerContext->DataRegDesc
-	);
-
-	// Skip rmi_f12_read_sensor_tuning for the prototype.
-
-	/*
-	* Figure out what data is contained in the data registers. HID devices
-	* may have registers defined, but their data is not reported in the
-	* HID attention report. Registers which are not reported in the HID
-	* attention report check to see if the device is receiving data from
-	* HID attention reports.
-	*/
-	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 0);
-	if (item) data_offset += (USHORT) item->RegisterSize;
-
-	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 1);
-	if (item != NULL)
-	{
-		ControllerContext->Data1Offset = data_offset;
-		ControllerContext->MaxFingers = item->NumSubPackets;
-		if ((ControllerContext->MaxFingers * F12_DATA1_BYTES_PER_OBJ) > 
-			(BYTE) (ControllerContext->PacketSize - ControllerContext->Data1Offset))
-		{
-			ControllerContext->MaxFingers = 
-				(BYTE) (ControllerContext->PacketSize - ControllerContext->Data1Offset) / 
-				F12_DATA1_BYTES_PER_OBJ;
-		}
-
-		if (ControllerContext->MaxFingers > RMI4_MAX_TOUCHES)
-		{
-			ControllerContext->MaxFingers = RMI4_MAX_TOUCHES;
-		}
-	}
-	else
-	{
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
 
     //
     // Find 0D capacitive button sensor function and configure it if it exists
@@ -780,15 +650,6 @@ RmiConfigureFunctions(
             status);
         goto exit;
     }
-
-    //
-    // Try to set continuous reporting mode during touch
-    //
-    RmiSetReportingMode(
-        ControllerContext,
-        SpbContext,
-        RMI_F12_REPORTING_MODE_CONTINUOUS,
-        NULL);
 
     //
     // Note whether the device configuration settings initialized the
@@ -1164,156 +1025,6 @@ RmiCheckInterrupts(
             TRACE_LEVEL_VERBOSE,
             TRACE_INTERRUPT,
             "Unexpected -- no interrupt status bit set");
-    }
-
-exit:
-    return status;
-}
-
-NTSTATUS
-RmiSetReportingMode(
-    IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-    IN SPB_CONTEXT *SpbContext,
-    IN UCHAR NewMode,
-    OUT UCHAR *OldMode
-)
-/*++
-
-Routine Description:
-
-Changes the F12 Reporting Mode on the controller as specified
-
-Arguments:
-
-ControllerContext - Touch controller context
-
-SpbContext - A pointer to the current i2c context
-
-NewMode - Either RMI_F12_REPORTING_MODE_CONTINUOUS
-          or RMI_F12_REPORTING_MODE_REDUCED
-
-OldMode - Old value of reporting mode
-
-Return Value:
-
-NTSTATUS indicating success or failure
-
---*/
-{
-    UCHAR reportingControl[3];
-    int index;
-    NTSTATUS status;
-    UINT8 indexCtrl20;
-
-    //
-    // Find RMI F12 function
-    //
-    index = RmiGetFunctionIndex(
-        ControllerContext->Descriptors,
-        ControllerContext->FunctionCount,
-        RMI4_F12_2D_TOUCHPAD_SENSOR);
-
-    if (index == ControllerContext->FunctionCount)
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_INIT,
-            "Set ReportingMode failure - RMI Function 12 missing");
-
-        status = STATUS_INVALID_DEVICE_STATE;
-        goto exit;
-    }
-
-    status = RmiChangePage(
-        ControllerContext,
-        SpbContext,
-        ControllerContext->FunctionOnPage[index]);
-
-    if (!NT_SUCCESS(status))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_INIT,
-            "Could not change register page");
-
-        goto exit;
-    }
-
-    indexCtrl20 = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, F12_2D_CTRL20);
-
-    if (indexCtrl20 == ControllerContext->ControlRegDesc.NumRegisters)
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_INIT,
-            "Cannot find F12_2D_Ctrl20 offset");
-
-        status = STATUS_INVALID_DEVICE_STATE;
-        goto exit;
-    }
-
-    if (ControllerContext->ControlRegDesc.Registers[indexCtrl20].RegisterSize != sizeof(reportingControl))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_INIT,
-            "Unexpected F12_2D_Ctrl20 register size");
-
-        status = STATUS_INVALID_DEVICE_STATE;
-        goto exit;
-    }
-
-    //
-    // Read Device Control register
-    //
-    status = SpbReadDataSynchronously(
-        SpbContext,
-        ControllerContext->Descriptors[index].ControlBase + indexCtrl20,
-        &reportingControl,
-        sizeof(reportingControl)
-    );
-
-    if (!NT_SUCCESS(status))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_INIT,
-            "Could not read F12_2D_Ctrl20 register - %!STATUS!",
-            status);
-
-        goto exit;
-    }
-
-    if (OldMode)
-    {
-        *OldMode = reportingControl[0] & RMI_F12_REPORTING_MODE_MASK;
-    }
-
-    //
-    // Assign new value
-    //
-    reportingControl[0] &= ~RMI_F12_REPORTING_MODE_MASK;
-    reportingControl[0] |= NewMode & RMI_F12_REPORTING_MODE_MASK;
-
-    //
-    // Write setting back to the controller
-    //
-    status = SpbWriteDataSynchronously(
-        SpbContext,
-        ControllerContext->Descriptors[index].ControlBase + indexCtrl20,
-        &reportingControl,
-        sizeof(reportingControl)
-    );
-
-    if (!NT_SUCCESS(status))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_INIT,
-            "Could not write F12_2D_Ctrl20 register - %X",
-            status);
-
-        goto exit;
     }
 
 exit:

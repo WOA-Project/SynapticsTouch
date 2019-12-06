@@ -50,13 +50,13 @@
 #define RMI4_PAGE_SELECT_ADDRESS          0xFF
 
 #define RMI4_F01_RMI_DEVICE_CONTROL       0x01
-#define RMI4_F12_2D_TOUCHPAD_SENSOR		  0x12
+#define RMI4_F11_2D_TOUCHPAD_SENSOR		  0x11
 #define RMI4_F1A_0D_CAP_BUTTON_SENSOR     0x1A
 #define RMI4_F34_FLASH_MEMORY_MANAGEMENT  0x34
 #define RMI4_F54_TEST_REPORTING           0x54
 
 #define RMI4_MAX_FUNCTIONS                10
-#define RMI4_MAX_TOUCHES                  32
+#define RMI4_MAX_TOUCHES                  10
 
 typedef struct _RMI4_FUNCTION_DESCRIPTOR
 {
@@ -254,8 +254,19 @@ typedef struct _RMI4_F11_CTRL_REGISTERS_LOGICAL
 
 typedef struct _RMI4_F11_DATA_POSITION
 {
-	int X;
-	int Y;
+    BYTE XPosHi;
+    BYTE YPosHi;
+    struct
+    {
+        BYTE XPosLo : 4;
+        BYTE YPosLo : 4;
+    };
+    struct
+    {
+        BYTE XWidth : 4;
+        BYTE YWidth : 4;
+    };
+    BYTE ZAmplitude;
 } RMI4_F11_DATA_POSITION;
 
 typedef struct _RMI4_F11_DATA_REGISTERS_STATUS_BLOCK
@@ -274,11 +285,11 @@ typedef struct _RMI4_F11_DATA_REGISTERS_STATUS_BLOCK
         BYTE FingerState6 : 2;
         BYTE FingerState7 : 2;
     };
-    struct 
+    struct
     {
         BYTE FingerState8 : 2;
         BYTE FingerState9 : 2;
-        BYTE Reserved0    : 4;
+        BYTE Reserved0 : 4;
     };
 } RMI4_F11_DATA_REGISTERS_STATUS_BLOCK;
 
@@ -297,30 +308,24 @@ typedef struct _RMI4_F11_DATA_REGISTERS
 // Function $12 - 2-D Touch Sensor
 //
 
-typedef enum _RMI4_F12_OBJECT_TYPE {
-	RMI_F12_OBJECT_NONE = 0x00,
-	RMI_F12_OBJECT_FINGER = 0x01,
-	RMI_F12_OBJECT_STYLUS = 0x02,
-	RMI_F12_OBJECT_PALM = 0x03,
-	RMI_F12_OBJECT_UNCLASSIFIED = 0x04,
-	RMI_F12_OBJECT_GLOVED_FINGER = 0x06,
-	RMI_F12_OBJECT_NARROW_OBJECT = 0x07,
-	RMI_F12_OBJECT_HAND_EDGE = 0x08,
-	RMI_F12_OBJECT_COVER = 0x0A,
-	RMI_F12_OBJECT_STYLUS_2 = 0x0B,
-	RMI_F12_OBJECT_ERASER = 0x0C,
-	RMI_F12_OBJECT_SMALL_OBJECT = 0x0D,
-} RMI4_F12_OBJECT_TYPE;
+typedef enum _RMI4_F11_OBJECT_TYPE {
+	RMI_F11_OBJECT_NONE = 0x00,
+	RMI_F11_OBJECT_FINGER = 0x01,
+	RMI_F11_OBJECT_STYLUS = 0x02,
+	RMI_F11_OBJECT_PALM = 0x03,
+	RMI_F11_OBJECT_UNCLASSIFIED = 0x04,
+	RMI_F11_OBJECT_GLOVED_FINGER = 0x06,
+	RMI_F11_OBJECT_NARROW_OBJECT = 0x07,
+	RMI_F11_OBJECT_HAND_EDGE = 0x08,
+	RMI_F11_OBJECT_COVER = 0x0A,
+	RMI_F11_OBJECT_STYLUS_2 = 0x0B,
+	RMI_F11_OBJECT_ERASER = 0x0C,
+	RMI_F11_OBJECT_SMALL_OBJECT = 0x0D,
+} RMI4_F11_OBJECT_TYPE;
 
-#define F12_DATA1_BYTES_PER_OBJ			8
+#define F11_DATA1_BYTES_PER_OBJ			8
 #define RMI_REG_DESC_PRESENSE_BITS	(32 * BITS_PER_BYTE)
 #define RMI_REG_DESC_SUBPACKET_BITS	(37 * BITS_PER_BYTE)
-
-#define RMI_F12_REPORTING_MODE_CONTINUOUS   0
-#define RMI_F12_REPORTING_MODE_REDUCED      1
-#define RMI_F12_REPORTING_MODE_MASK         7
-
-#define F12_2D_CTRL20   20
 
 /* describes a single packet register */
 typedef struct _RMI_REGISTER_DESC_ITEM {
@@ -510,7 +515,7 @@ typedef struct _RMI4_CONTROLLER_CONTEXT
     RMI4_FINGER_CACHE Cache;
 
 	//
-	// RMI4 F12 state
+	// RMI4 F11 state
 	//
 
 	BOOLEAN HasDribble;
