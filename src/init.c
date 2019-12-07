@@ -1051,7 +1051,7 @@ RmiSetReportingMode(
 
 Routine Description:
 
-Changes the F12 Reporting Mode on the controller as specified
+Changes the F11 Reporting Mode on the controller as specified
 
 Arguments:
 
@@ -1059,8 +1059,8 @@ ControllerContext - Touch controller context
 
 SpbContext - A pointer to the current i2c context
 
-NewMode - Either RMI_F12_REPORTING_MODE_CONTINUOUS
-          or RMI_F12_REPORTING_MODE_REDUCED
+NewMode - Either RMI_F11_REPORTING_MODE_CONTINUOUS
+          or RMI_F11_REPORTING_MODE_REDUCED
 
 OldMode - Old value of reporting mode
 
