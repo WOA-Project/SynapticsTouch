@@ -327,6 +327,12 @@ typedef enum _RMI4_F11_OBJECT_TYPE {
 #define RMI_REG_DESC_PRESENSE_BITS	(32 * BITS_PER_BYTE)
 #define RMI_REG_DESC_SUBPACKET_BITS	(37 * BITS_PER_BYTE)
 
+#define RMI_F11_REPORTING_MODE_CONTINUOUS   0
+#define RMI_F11_REPORTING_MODE_REDUCED      1
+#define RMI_F11_REPORTING_MODE_MASK         7
+
+#define F11_2D_CTRL0   0
+
 /* describes a single packet register */
 typedef struct _RMI_REGISTER_DESC_ITEM {
 	USHORT Register;

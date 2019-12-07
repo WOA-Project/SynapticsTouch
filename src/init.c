@@ -652,6 +652,15 @@ RmiConfigureFunctions(
     }
 
     //
+    // Try to set continuous reporting mode during touch
+    //
+    RmiSetReportingMode(
+        ControllerContext,
+        SpbContext,
+        RMI_F11_REPORTING_MODE_CONTINUOUS,
+        NULL);
+
+    //
     // Note whether the device configuration settings initialized the
     // controller in an operating state, to prevent a double-start from 
     // the D0 entry dispatch routine (TchWakeDevice)
@@ -1025,6 +1034,156 @@ RmiCheckInterrupts(
             TRACE_LEVEL_VERBOSE,
             TRACE_INTERRUPT,
             "Unexpected -- no interrupt status bit set");
+    }
+
+exit:
+    return status;
+}
+
+NTSTATUS
+RmiSetReportingMode(
+    IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+    IN SPB_CONTEXT* SpbContext,
+    IN UCHAR NewMode,
+    OUT UCHAR* OldMode
+)
+/*++
+
+Routine Description:
+
+Changes the F12 Reporting Mode on the controller as specified
+
+Arguments:
+
+ControllerContext - Touch controller context
+
+SpbContext - A pointer to the current i2c context
+
+NewMode - Either RMI_F12_REPORTING_MODE_CONTINUOUS
+          or RMI_F12_REPORTING_MODE_REDUCED
+
+OldMode - Old value of reporting mode
+
+Return Value:
+
+NTSTATUS indicating success or failure
+
+--*/
+{
+    UCHAR reportingControl[3];
+    int index;
+    NTSTATUS status;
+    UINT8 indexCtrl0;
+
+    //
+    // Find RMI F11 function
+    //
+    index = RmiGetFunctionIndex(
+        ControllerContext->Descriptors,
+        ControllerContext->FunctionCount,
+        RMI4_F11_2D_TOUCHPAD_SENSOR);
+
+    if (index == ControllerContext->FunctionCount)
+    {
+        Trace(
+            TRACE_LEVEL_ERROR,
+            TRACE_INIT,
+            "Set ReportingMode failure - RMI Function 11 missing");
+
+        status = STATUS_INVALID_DEVICE_STATE;
+        goto exit;
+    }
+
+    status = RmiChangePage(
+        ControllerContext,
+        SpbContext,
+        ControllerContext->FunctionOnPage[index]);
+
+    if (!NT_SUCCESS(status))
+    {
+        Trace(
+            TRACE_LEVEL_ERROR,
+            TRACE_INIT,
+            "Could not change register page");
+
+        goto exit;
+    }
+
+    indexCtrl0 = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, F11_2D_CTRL0);
+
+    if (indexCtrl0 == ControllerContext->ControlRegDesc.NumRegisters)
+    {
+        Trace(
+            TRACE_LEVEL_ERROR,
+            TRACE_INIT,
+            "Cannot find F11_2D_Ctrl0 offset");
+
+        status = STATUS_INVALID_DEVICE_STATE;
+        goto exit;
+    }
+
+    if (ControllerContext->ControlRegDesc.Registers[indexCtrl0].RegisterSize != sizeof(reportingControl))
+    {
+        Trace(
+            TRACE_LEVEL_ERROR,
+            TRACE_INIT,
+            "Unexpected F11_2D_Ctrl0 register size");
+
+        status = STATUS_INVALID_DEVICE_STATE;
+        goto exit;
+    }
+
+    //
+    // Read Device Control register
+    //
+    status = SpbReadDataSynchronously(
+        SpbContext,
+        ControllerContext->Descriptors[index].ControlBase + indexCtrl0,
+        &reportingControl,
+        sizeof(reportingControl)
+    );
+
+    if (!NT_SUCCESS(status))
+    {
+        Trace(
+            TRACE_LEVEL_ERROR,
+            TRACE_INIT,
+            "Could not read F11_2D_Ctrl0 register - %!STATUS!",
+            status);
+
+        goto exit;
+    }
+
+    if (OldMode)
+    {
+        *OldMode = reportingControl[0] & RMI_F11_REPORTING_MODE_MASK;
+    }
+
+    //
+    // Assign new value
+    //
+    reportingControl[0] &= ~RMI_F11_REPORTING_MODE_MASK;
+    reportingControl[0] |= NewMode & RMI_F11_REPORTING_MODE_MASK;
+
+    //
+    // Write setting back to the controller
+    //
+    status = SpbWriteDataSynchronously(
+        SpbContext,
+        ControllerContext->Descriptors[index].ControlBase + indexCtrl0,
+        &reportingControl,
+        sizeof(reportingControl)
+    );
+
+    if (!NT_SUCCESS(status))
+    {
+        Trace(
+            TRACE_LEVEL_ERROR,
+            TRACE_INIT,
+            "Could not write F11_2D_Ctrl0 register - %X",
+            status);
+
+        goto exit;
     }
 
 exit:
