@@ -678,7 +678,7 @@ Return Value:
 NTSTATUS
 RmiServiceTouchDataInterrupt(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-	IN SPB_CONTEXT* SpbContext,
+	IN RMI4_F11_DATA_REGISTERS data,
 	IN PPTP_REPORT HidReport,
 	IN UCHAR InputMode,
 	OUT BOOLEAN* PendingTouches
@@ -707,13 +707,11 @@ Return Value:
 		the screen
 --*/
 {
-	RMI4_F11_DATA_REGISTERS data;
 	NTSTATUS status;
 
 	UNREFERENCED_PARAMETER(InputMode);
 
 	status = STATUS_SUCCESS;
-	RtlZeroMemory(&data, sizeof(data));
 	NT_ASSERT(PendingTouches != NULL);
 	*PendingTouches = FALSE;
 
@@ -723,26 +721,6 @@ Return Value:
 	//
 	if (ControllerContext->TouchesReported == ControllerContext->TouchesTotal)
 	{
-		//
-		// See if new touch data is available
-		//
-		status = RmiGetTouchesFromController(
-			ControllerContext,
-			SpbContext,
-			&data
-		);
-
-		if (!NT_SUCCESS(status))
-		{
-			Trace(
-				TRACE_LEVEL_VERBOSE,
-				TRACE_SAMPLES,
-				"No touch data to report - %!STATUS!",
-				status);
-
-			goto exit;
-		}
-
 		//
 		// Process the new touch data by updating our cached state
 		//
@@ -800,7 +778,7 @@ exit:
 NTSTATUS
 RmiServicePenDataInterrupt(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-	IN SPB_CONTEXT* SpbContext,
+	IN RMI4_F11_DATA_REGISTERS data,
 	IN PPEN_REPORT HidReport,
 	IN UCHAR InputMode,
 	OUT BOOLEAN* PendingPens
@@ -829,13 +807,11 @@ Return Value:
 		the screen
 --*/
 {
-	RMI4_F11_DATA_REGISTERS data;
 	NTSTATUS status;
 
 	UNREFERENCED_PARAMETER(InputMode);
 
 	status = STATUS_SUCCESS;
-	RtlZeroMemory(&data, sizeof(data));
 	NT_ASSERT(PendingPens != NULL);
 	*PendingPens = FALSE;
 
@@ -845,26 +821,6 @@ Return Value:
 	//
 	if (ControllerContext->PensReported == ControllerContext->PensTotal)
 	{
-		//
-		// See if new touch data is available
-		//
-		status = RmiGetTouchesFromController(
-			ControllerContext,
-			SpbContext,
-			&data
-		);
-
-		if (!NT_SUCCESS(status))
-		{
-			Trace(
-				TRACE_LEVEL_VERBOSE,
-				TRACE_SAMPLES,
-				"No touch data to report - %!STATUS!",
-				status);
-
-			goto exit;
-		}
-
 		//
 		// Process the new touch data by updating our cached state
 		//
@@ -954,6 +910,7 @@ Return Value:
 {
 	NTSTATUS status = STATUS_NO_DATA_DETECTED;
 	RMI4_CONTROLLER_CONTEXT* controller;
+	RMI4_F11_DATA_REGISTERS data;
 
 	controller = (RMI4_CONTROLLER_CONTEXT*) ControllerContext;
 
@@ -964,6 +921,8 @@ Return Value:
 	// protected against power state transitions
 	//
 	WdfWaitLockAcquire(controller->ControllerLock, NULL);
+
+	RtlZeroMemory(&data, sizeof(data));
 
 	//
 	// Check the interrupt source if no interrupts are pending processing
@@ -1019,6 +978,30 @@ Return Value:
 	BOOLEAN pendingTouches = FALSE;
 	BOOLEAN pendingPens = FALSE;
 
+	if (controller->TouchesReported == controller->TouchesTotal ||
+		controller->PensReported == controller->PensTotal)
+	{
+		//
+		// See if new touch data is available
+		//
+		status = RmiGetTouchesFromController(
+			ControllerContext,
+			SpbContext,
+			&data
+		);
+
+		if (!NT_SUCCESS(status))
+		{
+			Trace(
+				TRACE_LEVEL_VERBOSE,
+				TRACE_SAMPLES,
+				"No pen data to report - %!STATUS!",
+				status);
+
+			goto exit;
+		}
+	}
+
 	//
 	// Service a touch data event if indicated by hardware 
 	//
@@ -1026,7 +1009,7 @@ Return Value:
 	{
 		status = RmiServiceTouchDataInterrupt(
 			ControllerContext,
-			SpbContext,
+			data,
 			&(HidReport->PtpReport),
 			InputMode,
 			&pendingTouches);
@@ -1056,7 +1039,7 @@ Return Value:
 	{
 		status = RmiServicePenDataInterrupt(
 			ControllerContext,
-			SpbContext,
+			data,
 			&(HidReport->PenReport),
 			InputMode,
 			&pendingPens);
