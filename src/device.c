@@ -45,8 +45,8 @@ OnInterruptIsr(
     NTSTATUS status;
     WDFREQUEST request;
     BOOLEAN servicingComplete;
-    PTP_REPORT hidReportFromDriver;
-    PPTP_REPORT hidReportRequestBuffer;
+    DEV_REPORT hidReportFromDriver;
+    PDEV_REPORT hidReportRequestBuffer;
     size_t hidReportRequestBufferLength;
 
     UNREFERENCED_PARAMETER(MessageID);
@@ -115,7 +115,7 @@ OnInterruptIsr(
         //
         status = WdfRequestRetrieveOutputBuffer(
             request,
-            sizeof(PTP_REPORT),
+            sizeof(DEV_REPORT),
             &hidReportRequestBuffer,
             &hidReportRequestBufferLength);
 
@@ -132,7 +132,7 @@ OnInterruptIsr(
             //
             // Validate the size of the output buffer
             //
-            if (hidReportRequestBufferLength < sizeof(PTP_REPORT))
+            if (hidReportRequestBufferLength < sizeof(DEV_REPORT))
             {
                 status = STATUS_BUFFER_TOO_SMALL;
     
@@ -148,9 +148,9 @@ OnInterruptIsr(
                 RtlCopyMemory(
                     hidReportRequestBuffer,
                     &hidReportFromDriver,
-                    sizeof(PTP_REPORT));
+                    sizeof(DEV_REPORT));
 
-                WdfRequestSetInformation(request, sizeof(PTP_REPORT));
+                WdfRequestSetInformation(request, sizeof(DEV_REPORT));
             }
         }
 

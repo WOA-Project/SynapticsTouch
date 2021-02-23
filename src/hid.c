@@ -13,6 +13,7 @@
 
 const UCHAR gReportDescriptor[] = {
 	SYNAPTICS_TOUCHSCREEN_TLC,
+    SYNAPTICS_PEN_TLC,
 	SYNAPTICS_CONFIGURATION_TLC
 };
 const ULONG gdwcbReportDescriptor = sizeof(gReportDescriptor);
@@ -91,7 +92,7 @@ Return Value:
     //
     if (devContext->ServiceInterruptsAfterD0Entry == TRUE)
     {
-		PTP_REPORT ptpReport;
+		DEV_REPORT ptpReport;
         BOOLEAN servicingComplete = FALSE;
 
         while (servicingComplete == FALSE)
@@ -707,6 +708,40 @@ Return Value:
 
 			break;
 		}
+        case REPORTID_PENHQA:
+        {
+            Trace(
+                TRACE_LEVEL_INFORMATION,
+                TRACE_DRIVER,
+                "%!FUNC! Report REPORTID_PENHQA is requested"
+            );
+
+            // Size sanity check
+            ReportSize = sizeof(PTP_DEVICE_HQA_CERTIFICATION_REPORT);
+            if (featurePacket->reportBufferLen < ReportSize)
+            {
+                status = STATUS_INVALID_BUFFER_SIZE;
+                Trace(
+                    TRACE_LEVEL_ERROR,
+                    TRACE_DRIVER,
+                    "%!FUNC! Report buffer is too small."
+                );
+                goto exit;
+            }
+
+            PPTP_DEVICE_HQA_CERTIFICATION_REPORT certReport = (PPTP_DEVICE_HQA_CERTIFICATION_REPORT)featurePacket->reportBuffer;
+
+            *certReport->CertificationBlob = DEFAULT_PTP_HQA_BLOB;
+            certReport->ReportID = REPORTID_PENHQA;
+
+            Trace(
+                TRACE_LEVEL_INFORMATION,
+                TRACE_DRIVER,
+                "%!FUNC! Report REPORTID_PENHQA is fulfilled"
+            );
+
+            break;
+        }
 		default:
 		{
 			Trace(

@@ -267,6 +267,12 @@ Return Value:
     controller->Cache.FingerSlotDirty = 0;
     controller->Cache.FingerDownCount = 0;
 
+    controller->PensReported = 0;
+    controller->PensTotal = 0;
+    controller->PenCache.PenSlotValid = 0;
+    controller->PenCache.PenSlotDirty = 0;
+    controller->PenCache.PenDownCount = 0;
+
     WdfWaitLockRelease(controller->ControllerLock);
 
     return STATUS_SUCCESS;

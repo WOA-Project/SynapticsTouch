@@ -41,7 +41,7 @@
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
     <SampleGuid>{25B3301B-A9D9-4EE3-8EA5-B1F1FBB3A18C}</SampleGuid>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -54,6 +54,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <KMDF_MINIMUM_VERSION_REQUIRED>
     </KMDF_MINIMUM_VERSION_REQUIRED>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetVersion>
@@ -65,6 +66,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <KMDF_MINIMUM_VERSION_REQUIRED>
     </KMDF_MINIMUM_VERSION_REQUIRED>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetVersion>
@@ -76,6 +78,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <KMDF_MINIMUM_VERSION_REQUIRED>
     </KMDF_MINIMUM_VERSION_REQUIRED>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <TargetVersion>
@@ -87,6 +90,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <KMDF_MINIMUM_VERSION_REQUIRED>
     </KMDF_MINIMUM_VERSION_REQUIRED>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <TargetVersion>
@@ -98,6 +102,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <KMDF_MINIMUM_VERSION_REQUIRED>
     </KMDF_MINIMUM_VERSION_REQUIRED>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetVersion>
@@ -109,6 +114,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <KMDF_MINIMUM_VERSION_REQUIRED>
     </KMDF_MINIMUM_VERSION_REQUIRED>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <TargetVersion>
@@ -120,6 +126,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <KMDF_MINIMUM_VERSION_REQUIRED>
     </KMDF_MINIMUM_VERSION_REQUIRED>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <TargetVersion>
@@ -131,6 +138,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <KMDF_MINIMUM_VERSION_REQUIRED>
     </KMDF_MINIMUM_VERSION_REQUIRED>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup>

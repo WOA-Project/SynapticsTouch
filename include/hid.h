@@ -259,6 +259,70 @@ TchReadReport(
 		FEATURE, 0x02, \
 	END_COLLECTION /* End Collection */
 
+#define SYNAPTICS_PEN_COLLECTION_1 \
+	BEGIN_COLLECTION, 0x02, /* Begin Collection: Logical */ \
+		/* Begin a byte */ \
+		LOGICAL_MAXIMUM, 0x01, /* Logical Maximum: 1 */ \
+		USAGE, 0x32, /* Usage: In Range */ \
+		USAGE, 0x42, /* Usage: Tip switch */ \
+		REPORT_COUNT, 0x02, /* Report Count: 2 */ \
+		REPORT_SIZE, 0x01, /* Report Size: 1 */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		REPORT_COUNT, 0x01, /* Report Count: 1 */ \
+		REPORT_SIZE, 0x03, /* Report Size: 3 */ \
+		LOGICAL_MAXIMUM, 0x03, /* Logical Maximum: 3 */ \
+		USAGE, 0x45, /* Usage: Eraser */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		REPORT_SIZE, 0x01, /* Report Size: 1 */ \
+		REPORT_COUNT, 0x03, /* Report Count: 3 */ \
+		INPUT, 0x03, /* Input: (Const, Var, Abs) */ \
+		/* End of a byte */ \
+		/* Begin of 4 bytes */ \
+		/* Size is hard-coded at this moment */ \
+		/* This hard-coded size is designed for Lumia 950 XL */ \
+		USAGE_PAGE, 0x01, /* Usage Page: Generic Desktop */ \
+		LOGICAL_MAXIMUM_2, 0xA0, 0x05, /* Logical Maximum: 1440 (See defintion) */ \
+		REPORT_SIZE, 0x10, /* Report Size: 0x10 (2 bytes) */ \
+		UNIT_EXPONENT, 0x0e, /* Unit exponent: -2 */ \
+		UNIT, 0x11, /* Unit: SI Length (cm) */ \
+		USAGE, 0x30, /* Usage: X */ \
+		PHYSICAL_MAXIMUM_2, 0xce, 0x02, /* Physical Maximum: 7.18 */ \
+		REPORT_COUNT, 0x01, /* Report count: 1 */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		PHYSICAL_MAXIMUM_2, 0xeb, 0x04, /* Physical Maximum: 12.59 */ \
+		LOGICAL_MAXIMUM_2, 0x00, 0x0a, /* Logical Maximum: 2560 (See definition) */ \
+		USAGE, 0x31, /* Usage: Y */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		PHYSICAL_MAXIMUM, 0x00, /* Physical Maximum: 0 */ \
+		UNIT_EXPONENT, 0x00, /* Unit exponent: 0 */ \
+		UNIT, 0x00, /* Unit: None */ \
+		/* End of 4 bytes */ \
+	END_COLLECTION /* End Collection */ \
+
+#define SYNAPTICS_PEN_TLC \
+	USAGE_PAGE, 0x0d, /* Usage Page: Digitizer */ \
+	USAGE, 0x02, /* Usage: Pen */ \
+	BEGIN_COLLECTION, 0x01, /* Begin Collection: Application */ \
+		REPORT_ID, REPORTID_PEN, /* Report ID: Pen */ \
+		USAGE, 0x20, /* Usage: Stylus */ \
+		SYNAPTICS_PEN_COLLECTION_1, /* 1 */  \
+		USAGE_PAGE, 0x0d, /* Usage Page: Digitizer */ \
+		UNIT_EXPONENT, 0x0c, /* Unit exponent: -4 */ \
+		UNIT_2, 0x01, 0x10, /* Time: Second */ \
+		PHYSICAL_MAXIMUM_3, 0xff, 0xff, 0x00, 0x00, \
+		LOGICAL_MAXIMUM_3, 0xff, 0xff, 0x00, 0x00, \
+		USAGE, 0x56, /* Usage: Scan Time */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE_PAGE_1, 0x00, 0xff, \
+		REPORT_ID, REPORTID_PENHQA, \
+		USAGE, 0xc5, \
+		LOGICAL_MINIMUM, 0x00, \
+		LOGICAL_MAXIMUM_2, 0xff, 0x00, \
+		REPORT_SIZE, 0x08, \
+		REPORT_COUNT_2, 0x00, 0x01, \
+		FEATURE, 0x02, \
+	END_COLLECTION /* End Collection */
+
 #define SYNAPTICS_CONFIGURATION_TLC \
 	USAGE_PAGE, 0x0d, /* Usage Page: Digitizer */ \
 	USAGE, 0x0e, /* Usage: Configuration */ \

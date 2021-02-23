@@ -280,6 +280,26 @@ typedef struct _RMI4_F11_DATA_REGISTERS_STATUS_BLOCK
         BYTE FingerState9 : 2;
         BYTE Reserved0    : 4;
     };
+    struct
+    {
+        BYTE PenState0 : 2;
+        BYTE PenState1 : 2;
+        BYTE PenState2 : 2;
+        BYTE PenState3 : 2;
+    };
+    struct
+    {
+        BYTE PenState4 : 2;
+        BYTE PenState5 : 2;
+        BYTE PenState6 : 2;
+        BYTE PenState7 : 2;
+    };
+    struct
+    {
+        BYTE PenState8 : 2;
+        BYTE PenState9 : 2;
+        BYTE Reserved1 : 4;
+    };
 } RMI4_F11_DATA_REGISTERS_STATUS_BLOCK;
 
 typedef struct _RMI4_F11_DATA_REGISTERS
@@ -292,6 +312,11 @@ typedef struct _RMI4_F11_DATA_REGISTERS
 #define RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS    1
 #define RMI4_FINGER_STATE_PRESENT_WITH_INACCURATE_POS  2
 #define RMI4_FINGER_STATE_RESERVED                     3
+
+#define RMI4_PEN_STATE_NOT_PRESENT                     0
+#define RMI4_PEN_STATE_PRESENT_WITH_TIP                1
+#define RMI4_PEN_STATE_PRESENT_WITH_ERASER             2
+#define RMI4_PEN_STATE_RESERVED                        3
 
 //
 // Function $12 - 2-D Touch Sensor
@@ -469,6 +494,16 @@ typedef struct _RMI4_FINGER_CACHE
     ULONG64 ScanTime;
 } RMI4_FINGER_CACHE;
 
+typedef struct _RMI4_PEN_CACHE
+{
+    RMI4_FINGER_INFO PenSlot[RMI4_MAX_TOUCHES];
+    UINT32 PenSlotValid;
+    UINT32 PenSlotDirty;
+    int PenDownOrder[RMI4_MAX_TOUCHES];
+    int PenDownCount;
+    ULONG64 ScanTime;
+} RMI4_PEN_CACHE;
+
 typedef struct _RMI4_CONTROLLER_CONTEXT
 {
     WDFDEVICE FxDevice;    
@@ -508,6 +543,10 @@ typedef struct _RMI4_CONTROLLER_CONTEXT
     int TouchesReported;
     int TouchesTotal;
     RMI4_FINGER_CACHE Cache;
+
+    int PensReported;
+    int PensTotal;
+    RMI4_PEN_CACHE PenCache;
 
 	//
 	// RMI4 F12 state
