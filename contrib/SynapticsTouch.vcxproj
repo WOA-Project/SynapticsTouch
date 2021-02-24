@@ -426,7 +426,7 @@
     <ClCompile Include="..\src\report.c" />
     <ClCompile Include="..\src\resolutions.c" />
     <ClCompile Include="..\src\spb.c" />
-    <ClCompile Include="function12.c" />
+    <ClCompile Include="..\src\rmi4\f12\function12.c" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Resource.rc" />
@@ -449,7 +449,7 @@
     <ClInclude Include="..\include\spb.h" />
     <ClInclude Include="..\include\trace.h" />
     <ClInclude Include="..\include\rmi4\f12\controlregisters.h" />
-    <ClInclude Include="function12.h" />
+    <ClInclude Include="..\include\rmi4\f12\function12.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

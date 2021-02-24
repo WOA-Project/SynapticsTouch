@@ -1,12 +1,33 @@
+/*++
+    Copyright (c) Microsoft Corporation. All Rights Reserved. 
+    Sample code. Dealpoint ID #843729.
+
+    Module Name:
+
+        function12.h
+
+    Abstract:
+
+        Contains function defintions used internally
+        by the F12 digitizer function.
+
+    Environment:
+
+        Kernel mode
+
+    Revision History:
+
+--*/
+
 #pragma once
 
 #include <wdm.h>
 #include <wdf.h>
-#include "controller.h"
-#include "resolutions.h"
-#include "bitops.h"
-#include "hweight.h"
-#include "rmiinternal.h"
+#include <controller.h>
+#include <resolutions.h>
+#include <bitops.h>
+#include <hweight.h>
+#include <rmiinternal.h>
 #include <rmi4\f12\controlregisters.h>
 
 NTSTATUS

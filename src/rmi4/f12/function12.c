@@ -7,7 +7,7 @@
 #include <HidCommon.h>
 #include <spb.h>
 #include <rmi4\f12\controlregisters.h>
-#include <function12.h>
+#include <rmi4\f12\function12.h>
 #include <function12.tmh>
 
 NTSTATUS

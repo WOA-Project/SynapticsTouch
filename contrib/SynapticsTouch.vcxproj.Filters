@@ -25,6 +25,12 @@
     <Filter Include="Header Files\rmi4\f12">
       <UniqueIdentifier>{d467d6ef-678f-4f2c-8c0e-42751577eb09}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rmi4">
+      <UniqueIdentifier>{4c9fff5f-d00e-4bd1-913e-ee2acf06c9cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\rmi4\f12">
+      <UniqueIdentifier>{660990c9-ba4a-4d94-a03e-6a98796c6862}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\bitops.c">
@@ -66,8 +72,8 @@
     <ClCompile Include="..\src\spb.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="function12.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\rmi4\f12\function12.c">
+      <Filter>Source Files\rmi4\f12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -132,7 +138,7 @@
     <ClInclude Include="..\include\rmi4\f12\controlregisters.h">
       <Filter>Header Files\rmi4\f12</Filter>
     </ClInclude>
-    <ClInclude Include="function12.h">
+    <ClInclude Include="..\include\rmi4\f12\function12.h">
       <Filter>Header Files\rmi4\f12</Filter>
     </ClInclude>
   </ItemGroup>

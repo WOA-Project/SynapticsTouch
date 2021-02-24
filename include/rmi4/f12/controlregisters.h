@@ -1,11 +1,32 @@
+/*++
+    Copyright (c) Microsoft Corporation. All Rights Reserved. 
+    Sample code. Dealpoint ID #843729.
+
+    Module Name:
+
+        controlregisters.h
+
+    Abstract:
+
+        Contains common types and defintions used internally
+        by the F12 digitizer function.
+
+    Environment:
+
+        Kernel mode
+
+    Revision History:
+
+--*/
+
 #pragma once
 
 #include <wdm.h>
 #include <wdf.h>
-#include "controller.h"
-#include "resolutions.h"
-#include "bitops.h"
-#include "hweight.h"
+#include <controller.h>
+#include <resolutions.h>
+#include <bitops.h>
+#include <hweight.h>
 
 // Ignore warning C4152: nonstandard extension, function/data pointer conversion in expression
 #pragma warning (disable : 4152)

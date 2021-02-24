@@ -6,8 +6,8 @@
 #include <rmiinternal.h>
 #include <HidCommon.h>
 #include <spb.h>
+#include <rmi4\f12\function12.h>
 #include <report.tmh>
-#include <function12.h>
 
 const USHORT gOEMVendorID = 0x7379;    // "sy"
 const USHORT gOEMProductID = 0x726D;    // "rm"
