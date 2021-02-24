@@ -19,6 +19,12 @@
     <Filter Include="Header Files\Cross Platform Shim">
       <UniqueIdentifier>{9686f0d4-e35c-4f82-a1bb-f9e1b58bf934}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\rmi4">
+      <UniqueIdentifier>{25a03d17-1f9e-4421-b353-801788d1c380}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\rmi4\f12">
+      <UniqueIdentifier>{d467d6ef-678f-4f2c-8c0e-42751577eb09}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\bitops.c">
@@ -58,6 +64,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\spb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="function12.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -118,6 +127,12 @@
       <Filter>Header Files\Cross Platform Shim</Filter>
     </ClInclude>
     <ClInclude Include="..\include\HidCommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\rmi4\f12\controlregisters.h">
+      <Filter>Header Files\rmi4\f12</Filter>
+    </ClInclude>
+    <ClInclude Include="function12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
