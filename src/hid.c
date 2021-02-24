@@ -6,6 +6,7 @@
 #include <controller.h>
 #include <hid.h>
 #include <hid.tmh>
+#include <rmiinternal.h>
 
 //
 // HID Report Descriptor for a touch device
@@ -653,6 +654,11 @@ Return Value:
 			capsReport->MaximumContactPoints = PTP_MAX_CONTACT_POINTS;
 			capsReport->ButtonType = PTP_BUTTON_TYPE_CLICK_PAD;
 			capsReport->ReportID = REPORTID_DEVICE_CAPS;
+
+            if (devContext->TouchContext != NULL)
+            {
+                capsReport->MaximumContactPoints = ((RMI4_CONTROLLER_CONTEXT*)devContext->TouchContext)->MaxFingers;
+            }
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,

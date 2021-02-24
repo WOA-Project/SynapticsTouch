@@ -40,58 +40,170 @@ RmiConfigureReportingModes(
 	Trace(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
-		"Current Controller Reporting Configuration: - "
-		"Reported Object Count: %d - "
-		"Reported Objects - "
-		"Finger: %d - "
-		" - "
-		"Active Stylus: %d - "
-		"Cover: %d - "
-		"Eraser: %d - "
-		"Gloved Finger: %d - "
-		"Hovering Finger: %d - "
-		"Palm: %d - "
-		"Small Object: %d - "
-		"Stylus: %d - "
-		"Unclassified Object: %d - "
-		"Hand Edge: %d - "
-		"Narrow Object Swipe: %d"
-		" - "
-		"Reported As Finger - "
-		"Active Stylus: %d - "
-		"Cover: %d - "
-		"Eraser: %d - "
-		"Gloved Finger: %d - "
-		"Hovering Finger: %d - "
-		"Palm: %d - "
-		"Small Object: %d - "
-		"Stylus: %d - "
-		"Unclassified Object: %d - "
-		"Hand Edge: %d - "
+		"Current Controller Reporting Configuration:"
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Reported Object Count: %d",
+		ControlRegisterData.ReportedObjectCount
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"--== Reported Objects ==--"
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Finger: %d",
+		ControlRegisterData.FingerReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		" "
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Active Stylus: %d",
+		ControlRegisterData.ActiveStylusReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Cover: %d",
+		ControlRegisterData.CoverReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Eraser: %d",
+		ControlRegisterData.EraserReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Gloved Finger: %d",
+		ControlRegisterData.GlovedFingerReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Hovering Finger: %d",
+		ControlRegisterData.HoveringFingerReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Palm: %d",
+		ControlRegisterData.PalmReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Small Object: %d",
+		ControlRegisterData.SmallObjectReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Stylus: %d",
+		ControlRegisterData.StylusReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Unclassified Object: %d",
+		ControlRegisterData.UnclassifiedObjectReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Hand Edge: %d",
+		ControlRegisterData.HandEdgeReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
 		"Narrow Object Swipe: %d",
-		ControlRegisterData.ReportedObjectCount,
-		ControlRegisterData.FingerReportingEnabled,
-		ControlRegisterData.ActiveStylusReportingEnabled,
-		ControlRegisterData.CoverReportingEnabled,
-		ControlRegisterData.EraserReportingEnabled,
-		ControlRegisterData.GlovedFingerReportingEnabled,
-		ControlRegisterData.HoveringFingerReportingEnabled,
-		ControlRegisterData.PalmReportingEnabled,
-		ControlRegisterData.SmallObjectReportingEnabled,
-		ControlRegisterData.StylusReportingEnabled,
-		ControlRegisterData.UnclassifiedObjectReportingEnabled,
-		ControlRegisterData.HandEdgeReportingEnabled,
-		ControlRegisterData.NarrowObjectReportingEnabled,
-		ControlRegisterData.ReportActiveStylusAsFinger,
-		ControlRegisterData.ReportCoverAsFinger,
-		ControlRegisterData.ReportEraserAsFinger,
-		ControlRegisterData.ReportGlovedFingerAsFinger,
-		ControlRegisterData.ReportHoveringFingerAsFinger,
-		ControlRegisterData.ReportPalmAsFinger,
-		ControlRegisterData.ReportSmallObjectAsFinger,
-		ControlRegisterData.ReportStylusAsFinger,
-		ControlRegisterData.ReportUnclassifiedObjectAsFinger,
-		ControlRegisterData.ReportHandEdgeAsFinger,
+		ControlRegisterData.NarrowObjectReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		" "
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"--== Reported As Finger ==--"
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Active Stylus: %d",
+		ControlRegisterData.ReportActiveStylusAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Cover: %d",
+		ControlRegisterData.ReportCoverAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Eraser: %d",
+		ControlRegisterData.ReportEraserAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Gloved Finger: %d",
+		ControlRegisterData.ReportGlovedFingerAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Hovering Finger: %d",
+		ControlRegisterData.ReportHoveringFingerAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Palm: %d",
+		ControlRegisterData.ReportPalmAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Small Object: %d",
+		ControlRegisterData.ReportSmallObjectAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Stylus: %d",
+		ControlRegisterData.ReportStylusAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Unclassified Object: %d",
+		ControlRegisterData.ReportUnclassifiedObjectAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Hand Edge: %d",
+		ControlRegisterData.ReportHandEdgeAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Narrow Object Swipe: %d",
 		ControlRegisterData.ReportNarrowObjectSwipeAsFinger
 	);
 
@@ -106,6 +218,8 @@ RmiConfigureReportingModes(
 		Turn on every object type and turn off reporting as finger,
 		let that be handled by us instead.
 	*/
+
+	ControlRegisterData.ReportedObjectCount = 10;
 
 	ControlRegisterData.FingerReportingEnabled = 1;
 	ControlRegisterData.ActiveStylusReportingEnabled = 1;
@@ -135,58 +249,170 @@ RmiConfigureReportingModes(
 	Trace(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
-		"New Controller Reporting Configuration: - "
-		"Reported Object Count: %d - "
-		"Reported Objects - "
-		"Finger: %d - "
-		" - "
-		"Active Stylus: %d - "
-		"Cover: %d - "
-		"Eraser: %d - "
-		"Gloved Finger: %d - "
-		"Hovering Finger: %d - "
-		"Palm: %d - "
-		"Small Object: %d - "
-		"Stylus: %d - "
-		"Unclassified Object: %d - "
-		"Hand Edge: %d - "
-		"Narrow Object Swipe: %d"
-		" - "
-		"Reported As Finger - "
-		"Active Stylus: %d - "
-		"Cover: %d - "
-		"Eraser: %d - "
-		"Gloved Finger: %d - "
-		"Hovering Finger: %d - "
-		"Palm: %d - "
-		"Small Object: %d - "
-		"Stylus: %d - "
-		"Unclassified Object: %d - "
-		"Hand Edge: %d - "
+		"New Controller Reporting Configuration:"
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Reported Object Count: %d",
+		ControlRegisterData.ReportedObjectCount
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"--== Reported Objects ==--"
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Finger: %d",
+		ControlRegisterData.FingerReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		" "
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Active Stylus: %d",
+		ControlRegisterData.ActiveStylusReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Cover: %d",
+		ControlRegisterData.CoverReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Eraser: %d",
+		ControlRegisterData.EraserReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Gloved Finger: %d",
+		ControlRegisterData.GlovedFingerReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Hovering Finger: %d",
+		ControlRegisterData.HoveringFingerReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Palm: %d",
+		ControlRegisterData.PalmReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Small Object: %d",
+		ControlRegisterData.SmallObjectReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Stylus: %d",
+		ControlRegisterData.StylusReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Unclassified Object: %d",
+		ControlRegisterData.UnclassifiedObjectReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Hand Edge: %d",
+		ControlRegisterData.HandEdgeReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
 		"Narrow Object Swipe: %d",
-		ControlRegisterData.ReportedObjectCount,
-		ControlRegisterData.FingerReportingEnabled,
-		ControlRegisterData.ActiveStylusReportingEnabled,
-		ControlRegisterData.CoverReportingEnabled,
-		ControlRegisterData.EraserReportingEnabled,
-		ControlRegisterData.GlovedFingerReportingEnabled,
-		ControlRegisterData.HoveringFingerReportingEnabled,
-		ControlRegisterData.PalmReportingEnabled,
-		ControlRegisterData.SmallObjectReportingEnabled,
-		ControlRegisterData.StylusReportingEnabled,
-		ControlRegisterData.UnclassifiedObjectReportingEnabled,
-		ControlRegisterData.HandEdgeReportingEnabled,
-		ControlRegisterData.NarrowObjectReportingEnabled,
-		ControlRegisterData.ReportActiveStylusAsFinger,
-		ControlRegisterData.ReportCoverAsFinger,
-		ControlRegisterData.ReportEraserAsFinger,
-		ControlRegisterData.ReportGlovedFingerAsFinger,
-		ControlRegisterData.ReportHoveringFingerAsFinger,
-		ControlRegisterData.ReportPalmAsFinger,
-		ControlRegisterData.ReportSmallObjectAsFinger,
-		ControlRegisterData.ReportStylusAsFinger,
-		ControlRegisterData.ReportUnclassifiedObjectAsFinger,
-		ControlRegisterData.ReportHandEdgeAsFinger,
+		ControlRegisterData.NarrowObjectReportingEnabled
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		" "
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"--== Reported As Finger ==--"
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Active Stylus: %d",
+		ControlRegisterData.ReportActiveStylusAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Cover: %d",
+		ControlRegisterData.ReportCoverAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Eraser: %d",
+		ControlRegisterData.ReportEraserAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Gloved Finger: %d",
+		ControlRegisterData.ReportGlovedFingerAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Hovering Finger: %d",
+		ControlRegisterData.ReportHoveringFingerAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Palm: %d",
+		ControlRegisterData.ReportPalmAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Small Object: %d",
+		ControlRegisterData.ReportSmallObjectAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Stylus: %d",
+		ControlRegisterData.ReportStylusAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Unclassified Object: %d",
+		ControlRegisterData.ReportUnclassifiedObjectAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Hand Edge: %d",
+		ControlRegisterData.ReportHandEdgeAsFinger
+	);
+	Trace(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Narrow Object Swipe: %d",
 		ControlRegisterData.ReportNarrowObjectSwipeAsFinger
 	);
 
@@ -206,6 +432,8 @@ RmiConfigureReportingModes(
 
 		goto exit;
 	}
+
+	ControllerContext->MaxFingers = ControlRegisterData.ReportedObjectCount;
 
 exit:
 	return status;
@@ -372,6 +600,22 @@ RmiConfigureFunction12(
 
 	// Skip rmi_f12_read_sensor_tuning for the prototype.
 
+	//
+	// Try to set continuous reporting mode during touch
+	//
+	RmiSetReportingMode(
+		ControllerContext,
+		SpbContext,
+		RMI_F12_REPORTING_MODE_CONTINUOUS,
+		NULL);
+
+	//
+	// Try to set new configuration for reporting
+	//
+	RmiConfigureReportingModes(
+		ControllerContext,
+		SpbContext);
+
 	/*
 	* Figure out what data is contained in the data registers. HID devices
 	* may have registers defined, but their data is not reported in the
@@ -386,33 +630,7 @@ RmiConfigureFunction12(
 	if (item != NULL)
 	{
 		ControllerContext->HasData1 = TRUE;
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Data 1 offset: %d",
-			data_offset);
-
 		ControllerContext->Data1Offset = data_offset;
-		ControllerContext->MaxFingers = item->NumSubPackets;
-		if ((ControllerContext->MaxFingers * F12_DATA1_BYTES_PER_OBJ) >
-			(BYTE)(ControllerContext->PacketSize - ControllerContext->Data1Offset))
-		{
-			ControllerContext->MaxFingers =
-				(BYTE)(ControllerContext->PacketSize - ControllerContext->Data1Offset) /
-				F12_DATA1_BYTES_PER_OBJ;
-		}
-
-		if (ControllerContext->MaxFingers > RMI4_MAX_TOUCHES)
-		{
-			ControllerContext->MaxFingers = RMI4_MAX_TOUCHES;
-		}
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Max fingers: %d",
-			ControllerContext->MaxFingers);
 
 		data_offset += (USHORT)item->RegisterSize;
 	}
@@ -430,13 +648,6 @@ RmiConfigureFunction12(
 	if (item != NULL)
 	{
 		ControllerContext->HasData5 = TRUE;
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Data 5 offset: %d",
-			data_offset);
-
 		ControllerContext->Data5Offset = data_offset;
 
 		data_offset += (USHORT)item->RegisterSize;
@@ -446,13 +657,6 @@ RmiConfigureFunction12(
 	if (item != NULL)
 	{
 		ControllerContext->HasData6 = TRUE;
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Data 6 offset: %d",
-			data_offset);
-
 		ControllerContext->Data6Offset = data_offset;
 
 		data_offset += (USHORT)item->RegisterSize;
@@ -468,13 +672,6 @@ RmiConfigureFunction12(
 	if (item != NULL)
 	{
 		ControllerContext->HasData9 = TRUE;
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Data 9 offset: %d",
-			data_offset);
-
 		ControllerContext->Data9Offset = data_offset;
 
 		data_offset += (USHORT)item->RegisterSize;
@@ -499,30 +696,10 @@ RmiConfigureFunction12(
 	if (item != NULL)
 	{
 		ControllerContext->HasData15 = TRUE;
-
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Data 15 offset: %d",
-			data_offset);
-
 		ControllerContext->Data15Offset = data_offset;
 
 		data_offset += (USHORT)item->RegisterSize;
 	}
-
-	//
-	// Try to set continuous reporting mode during touch
-	//
-	RmiSetReportingMode(
-		ControllerContext,
-		SpbContext,
-		RMI_F12_REPORTING_MODE_CONTINUOUS,
-		NULL);
-
-	RmiConfigureReportingModes(
-		ControllerContext,
-		SpbContext);
 
 exit:
 	return status;
@@ -561,8 +738,7 @@ Return Value:
 
 	BYTE fingerStatus[RMI4_MAX_TOUCHES] = { 0 };
 	BYTE penStatus[RMI4_MAX_TOUCHES] = { 0 };
-	BYTE* data1;
-	BYTE* controllerData;
+	PRMI4_F12_DATA_1_REGISTER controllerData = NULL;
 
 	controller = (RMI4_CONTROLLER_CONTEXT*)ControllerContext;
 
@@ -602,7 +778,7 @@ Return Value:
 
 	controllerData = ExAllocatePoolWithTag(
 		NonPagedPoolNx,
-		controller->PacketSize,
+		(ULONG)(controller->MaxFingers * sizeof(RMI4_F12_DATA_1_REGISTER)),
 		TOUCH_POOL_TAG_F12
 	);
 
@@ -617,9 +793,9 @@ Return Value:
 	//
 	status = SpbReadDataSynchronously(
 		SpbContext,
-		controller->Descriptors[index].DataBase,
+		controller->Descriptors[index].DataBase + (BYTE)controller->Data1Offset,
 		controllerData,
-		(ULONG)controller->PacketSize
+		(ULONG)(controller->MaxFingers * sizeof(RMI4_F12_DATA_1_REGISTER))
 	);
 
 	if (!NT_SUCCESS(status))
@@ -633,154 +809,153 @@ Return Value:
 		goto free_buffer;
 	}
 
-	data1 = &controllerData[controller->Data1Offset];
 	fingers = 0;
 	pens = 0;
 
-	if (data1 != NULL)
+	for (i = 0; i < controller->MaxFingers; i++)
 	{
-		for (i = 0; i < controller->MaxFingers; i++)
+		switch (controllerData[i].ObjectTypeAndStatus)
 		{
-			switch (data1[0])
-			{
-			case RMI4_F12_OBJECT_FINGER:
-				fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
-				penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
-				fingers++;
+		case RMI4_F12_OBJECT_FINGER:
+			fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
+			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			fingers++;
 
-				Trace(
-					TRACE_LEVEL_INFORMATION,
-					TRACE_INTERRUPT,
-					"Finger[%d] status is finger",
-					i);
+			Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is finger",
+				i);
 
-				break;
-			case RMI4_F12_OBJECT_HOVERING_FINGER:
-				fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
-				penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
-				fingers++;
+			break;
+		case RMI4_F12_OBJECT_HOVERING_FINGER:
+			fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
+			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			fingers++;
 
-				Trace(
-					TRACE_LEVEL_INFORMATION,
-					TRACE_INTERRUPT,
-					"Finger[%d] status is hovering finger",
-					i);
+			Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is hovering finger",
+				i);
 
-				break;
-			case RMI4_F12_OBJECT_GLOVED_FINGER:
-				fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
-				penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
-				fingers++;
+			break;
+		case RMI4_F12_OBJECT_GLOVED_FINGER:
+			fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
+			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			fingers++;
 
-				Trace(
-					TRACE_LEVEL_INFORMATION,
-					TRACE_INTERRUPT,
-					"Finger[%d] status is gloved finger",
-					i);
+			Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is gloved finger",
+				i);
 
-				break;
-			case RMI4_F12_OBJECT_ACTIVE_STYLUS:
-				fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-				penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
-				pens++;
+			break;
+		case RMI4_F12_OBJECT_ACTIVE_STYLUS:
+			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
+			pens++;
 
-				Trace(
-					TRACE_LEVEL_INFORMATION,
-					TRACE_INTERRUPT,
-					"Finger[%d] status is active stylus",
-					i);
+			Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is active stylus",
+				i);
 
-				break;
-			case RMI4_F12_OBJECT_STYLUS:
-				fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-				penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
-				pens++;
+			break;
+		case RMI4_F12_OBJECT_STYLUS:
+			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
+			pens++;
 
-				Trace(
-					TRACE_LEVEL_INFORMATION,
-					TRACE_INTERRUPT,
-					"Finger[%d] status is stylus",
-					i);
+			Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is stylus",
+				i);
 
-				break;
-			case RMI4_F12_OBJECT_ERASER:
-				fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-				penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_ERASER;
-				pens++;
+			break;
+		case RMI4_F12_OBJECT_ERASER:
+			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_ERASER;
+			pens++;
 
-				Trace(
-					TRACE_LEVEL_INFORMATION,
-					TRACE_INTERRUPT,
-					"Finger[%d] status is eraser",
-					i);
+			Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is eraser",
+				i);
 
-				break;
-			case RMI4_F12_OBJECT_NONE:
-				fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-				penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			break;
+		case RMI4_F12_OBJECT_NONE:
+			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
-				Trace(
-					TRACE_LEVEL_INFORMATION,
-					TRACE_INTERRUPT,
-					"Finger[%d] status is none",
-					i);
+			/*Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is none",
+				i);*/
 
-				break;
-			default:
-				fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-				penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			break;
+		default:
+			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
-				Trace(
-					TRACE_LEVEL_INFORMATION,
-					TRACE_INTERRUPT,
-					"Finger[%d] status is unknown: %d",
-					i,
-					data1[0]);
+			Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is unknown: %d",
+				i,
+				controllerData[i].ObjectTypeAndStatus);
 
-				break;
-			}
-
-			x = (data1[2] << 8) | data1[1];
-			y = (data1[4] << 8) | data1[3];
-
-			Data->Finger[i].X = x;
-			Data->Finger[i].Y = y;
-
-			data1 += F12_DATA1_BYTES_PER_OBJ;
+			break;
 		}
 
-		// Synchronize status back
-		Data->Status.FingerState0 = fingerStatus[0];
-		Data->Status.FingerState1 = fingerStatus[1];
-		Data->Status.FingerState2 = fingerStatus[2];
-		Data->Status.FingerState3 = fingerStatus[3];
-		Data->Status.FingerState4 = fingerStatus[4];
-		Data->Status.FingerState5 = fingerStatus[5];
-		Data->Status.FingerState6 = fingerStatus[6];
-		Data->Status.FingerState7 = fingerStatus[7];
-		Data->Status.FingerState8 = fingerStatus[8];
-		Data->Status.FingerState9 = fingerStatus[9];
+		x = (controllerData[i].X_MSB << 8) | controllerData[i].X_LSB;
+		y = (controllerData[i].Y_MSB << 8) | controllerData[i].Y_LSB;
 
-		Data->Status.PenState0 = penStatus[0];
-		Data->Status.PenState1 = penStatus[1];
-		Data->Status.PenState2 = penStatus[2];
-		Data->Status.PenState3 = penStatus[3];
-		Data->Status.PenState4 = penStatus[4];
-		Data->Status.PenState5 = penStatus[5];
-		Data->Status.PenState6 = penStatus[6];
-		Data->Status.PenState7 = penStatus[7];
-		Data->Status.PenState8 = penStatus[8];
-		Data->Status.PenState9 = penStatus[9];
+		Data->Finger[i].X = x;
+		Data->Finger[i].Y = y;
+
+		if (controllerData[i].ObjectTypeAndStatus != RMI4_F12_OBJECT_NONE)
+		{
+			Trace(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] X: %d, Y: %d, Z: %d, wX: %d, wY: %d",
+				i,
+				x,
+				y,
+				controllerData[i].Z,
+				controllerData[i].wX,
+				controllerData[i].wY);
+		}
 	}
-	else
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INTERRUPT,
-			"Error reading finger status data - empty buffer"
-		);
-		goto free_buffer;
-	}
+
+	// Synchronize status back
+	Data->Status.FingerState0 = fingerStatus[0];
+	Data->Status.FingerState1 = fingerStatus[1];
+	Data->Status.FingerState2 = fingerStatus[2];
+	Data->Status.FingerState3 = fingerStatus[3];
+	Data->Status.FingerState4 = fingerStatus[4];
+	Data->Status.FingerState5 = fingerStatus[5];
+	Data->Status.FingerState6 = fingerStatus[6];
+	Data->Status.FingerState7 = fingerStatus[7];
+	Data->Status.FingerState8 = fingerStatus[8];
+	Data->Status.FingerState9 = fingerStatus[9];
+
+	Data->Status.PenState0 = penStatus[0];
+	Data->Status.PenState1 = penStatus[1];
+	Data->Status.PenState2 = penStatus[2];
+	Data->Status.PenState3 = penStatus[3];
+	Data->Status.PenState4 = penStatus[4];
+	Data->Status.PenState5 = penStatus[5];
+	Data->Status.PenState6 = penStatus[6];
+	Data->Status.PenState7 = penStatus[7];
+	Data->Status.PenState8 = penStatus[8];
+	Data->Status.PenState9 = penStatus[9];
 
 free_buffer:
 	ExFreePoolWithTag(

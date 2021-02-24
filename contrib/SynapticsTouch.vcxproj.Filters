@@ -133,7 +133,7 @@
       <Filter>Header Files\rmi4\f12</Filter>
     </ClInclude>
     <ClInclude Include="function12.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\rmi4\f12</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
