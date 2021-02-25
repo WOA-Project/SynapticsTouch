@@ -23,34 +23,30 @@
 
 #include <wdm.h>
 #include <wdf.h>
-#include <controller.h>
-#include <resolutions.h>
-#include <bitops.h>
-#include <hweight.h>
-#include <rmiinternal.h>
+#include <rmi4\rmiinternal.h>
 #include <rmi4\f12\controlregisters.h>
 
 NTSTATUS
-RmiGetTouchesFromController(
+RmiGetObjectsFromControllerF12(
     IN VOID* ControllerContext,
     IN SPB_CONTEXT* SpbContext,
-    IN RMI4_F11_DATA_REGISTERS* Data
+    IN RMI4_DETECTED_OBJECTS* Data
 );
 
 NTSTATUS
-RmiConfigureFunction12(
+RmiConfigureF12(
     IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
     IN SPB_CONTEXT* SpbContext
 );
 
 NTSTATUS
-RmiConfigureReportingModes(
+RmiConfigureReportingF12(
     IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
     IN SPB_CONTEXT* SpbContext
 );
 
 NTSTATUS
-RmiSetReportingMode(
+RmiSetReportingFlagsF12(
     IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
     IN SPB_CONTEXT* SpbContext,
     IN UCHAR NewMode,
@@ -58,22 +54,29 @@ RmiSetReportingMode(
 );
 
 NTSTATUS
-RmiGetReporting(
+RmiGetReportingConfigurationF12(
     IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
     IN SPB_CONTEXT* SpbContext,
-    OUT PRMI4_F12_CONTROL_23_REGISTER ControlRegisterData
+    OUT PRMI4_F12_OBJECT_REPORT_ENABLE_REGISTER ControlRegisterData
 );
 
 NTSTATUS
-RmiSetReporting(
+RmiSetReportingConfigurationF12(
     IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
     IN SPB_CONTEXT* SpbContext,
-    IN PRMI4_F12_CONTROL_23_REGISTER ControlRegisterData
+    IN PRMI4_F12_OBJECT_REPORT_ENABLE_REGISTER ControlRegisterData
 );
 
 NTSTATUS
-RmiGetQuery5(
+RmiGetSupportedControlRegistersF12(
     IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
     IN SPB_CONTEXT* SpbContext,
     OUT PRMI4_F12_QUERY_5_REGISTER ControlRegisterData
+);
+
+NTSTATUS
+RmiGetSupportedDataRegistersF12(
+    IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+    IN SPB_CONTEXT* SpbContext,
+    OUT PRMI4_F12_QUERY_8_REGISTER ControlRegisterData
 );

@@ -23,10 +23,6 @@
 
 #include <wdm.h>
 #include <wdf.h>
-#include <controller.h>
-#include <resolutions.h>
-#include <bitops.h>
-#include <hweight.h>
 
 // Ignore warning C4152: nonstandard extension, function/data pointer conversion in expression
 #pragma warning (disable : 4152)
@@ -55,6 +51,133 @@
 #define F12_2D_CTRL20   20
 #define F12_2D_CTRL23   23
 
+struct synaptics_rmi4_f12_ctrl_8 {
+	union {
+		struct {
+			unsigned char max_x_coord_lsb;
+			unsigned char max_x_coord_msb;
+			unsigned char max_y_coord_lsb;
+			unsigned char max_y_coord_msb;
+			unsigned char rx_pitch_lsb;
+			unsigned char rx_pitch_msb;
+			unsigned char tx_pitch_lsb;
+			unsigned char tx_pitch_msb;
+			unsigned char low_rx_clip;
+			unsigned char high_rx_clip;
+			unsigned char low_tx_clip;
+			unsigned char high_tx_clip;
+			unsigned char num_of_rx;
+			unsigned char num_of_tx;
+		};
+		unsigned char data[14];
+	};
+};
+
+struct synaptics_rmi4_f12_ctrl_9 {
+	union {
+		struct {
+			unsigned char touch_threshold;
+			unsigned char lift_hysteresis;
+			unsigned char small_z_scale_factor_lsb;
+			unsigned char small_z_scale_factor_msb;
+			unsigned char large_z_scale_factor_lsb;
+			unsigned char large_z_scale_factor_msb;
+			unsigned char small_large_boundary;
+			unsigned char wx_scale;
+			unsigned char wx_offset;
+			unsigned char wy_scale;
+			unsigned char wy_offset;
+			unsigned char x_size_lsb;
+			unsigned char x_size_msb;
+			unsigned char y_size_lsb;
+			unsigned char y_size_msb;
+			unsigned char stability_threshold;
+			unsigned char gloved_finger_threshold;
+			unsigned char gloved_finger_landing_frames;
+			unsigned char average_peak_ratio;
+			unsigned char enable_thick_glove_detection;
+		};
+		unsigned char data[20];
+	};
+};
+
+struct synaptics_rmi4_f12_ctrl_10 {
+	union {
+		struct {
+			unsigned char noise_floor;
+			unsigned char min_peak_amp;
+			unsigned char peak_merge_threshold;
+			unsigned char drumming_acc_threshold;
+			unsigned char min_drumming_separation;
+			unsigned char noise_peak_filter;
+			unsigned char reserved;
+		};
+		unsigned char data[7];
+	};
+};
+
+struct synaptics_rmi4_f12_ctrl_15 {
+	union {
+		struct {
+			unsigned char finger_amp_threshold;
+			unsigned char small_finger_amp_threshold;
+			unsigned char small_finger_border_size;
+			unsigned char negative_finger_amp_threshold;
+			unsigned char palm_amp_threshold;
+			unsigned char palm_area;
+			unsigned char negative_finger_low_ground_mass_threshold;
+		};
+		unsigned char data[7];
+	};
+};
+
+struct synaptics_rmi4_f12_ctrl_18 {
+	union {
+		struct {
+			unsigned char double_tap_x0_LSB;
+			unsigned char double_tap_x0_MSB;
+			unsigned char double_tap_y0_LSB;
+			unsigned char double_tap_y0_MSB;
+			unsigned char double_tap_x1_LSB;
+			unsigned char double_tap_x1_MSB;
+			unsigned char double_tap_y1_LSB;
+			unsigned char double_tap_y1_MSB;
+			unsigned char max_tap_time;
+			unsigned char max_tap_distance;
+			unsigned char swipe_x0_LSB;
+			unsigned char swipe_x0_MSB;
+			unsigned char swipe_y0_LSB;
+			unsigned char swipe_y0_MSB;
+			unsigned char swipe_x1_LSB;
+			unsigned char swipe_x1_MSB;
+			unsigned char swipe_y1_LSB;
+			unsigned char swipe_y1_MSB;
+			unsigned char swipe_min_disance;
+			unsigned char swipe_min_speed;
+			unsigned char circle_max_endpoint_gap;
+			unsigned char circle_min_speed;
+			unsigned char triangle_max_endpoint_gap;
+			unsigned char triangle_min_speed;
+			unsigned char triangle_min_angle;
+			unsigned char up_vee : 1;
+			unsigned char down_vee : 1;
+			unsigned char left_vee : 1;
+			unsigned char right_vee : 1;
+			unsigned char f12_ctr18_05_b4__7 : 4;
+			unsigned char vee_min_endpoint_gap;
+			unsigned char vee_min_speed;
+			unsigned char vee_angle_tolerance;
+			unsigned char unicode_max_endpoint_gap;
+			unsigned char unicode_min_speed;
+			unsigned char f12_ctr18_06_orientation : 3;
+			unsigned char f12_ctr18_06_b3__7 : 5;
+		};
+		unsigned char data[32];
+	};
+};
+
+
+
 typedef enum _RMI4_F12_REPORTING_FLAGS
 {
 	RMI4_F12_REPORTING_CONTINUOUS_MODE     = 0,
@@ -79,7 +202,7 @@ typedef enum _RMI4_F12_OBJECT_TYPE {
 	RMI4_F12_OBJECT_SMALL_OBJECT = 0x0D,
 } RMI4_F12_OBJECT_TYPE;
 
-typedef struct _RMI4_F12_DATA_1_REGISTER {
+typedef struct _RMI4_F12_FINGER_DATA_REGISTER {
 	BYTE ObjectTypeAndStatus;
 	BYTE X_LSB;
 	BYTE X_MSB;
@@ -88,7 +211,7 @@ typedef struct _RMI4_F12_DATA_1_REGISTER {
 	BYTE Z;
 	BYTE wX;
 	BYTE wY;
-} RMI4_F12_DATA_1_REGISTER, * PRMI4_F12_DATA_1_REGISTER;
+} RMI4_F12_FINGER_DATA_REGISTER, * PRMI4_F12_FINGER_DATA_REGISTER;
 
 typedef struct _RMI4_F12_QUERY_5_REGISTER {
 	union {
@@ -184,7 +307,7 @@ typedef struct _RMI4_F12_QUERY_5_REGISTER {
 
 typedef struct _RMI4_F12_QUERY_8_REGISTER {
 	union {
-		BYTE Data[3];
+		BYTE Data[4];
 		struct {
 			BYTE Size;
 #pragma pack(push)
@@ -214,24 +337,38 @@ typedef struct _RMI4_F12_QUERY_8_REGISTER {
 				BYTE data15_is_present : 1;
 			};
 #pragma pack(pop)
+
+#pragma pack(push)
+#pragma pack(1)
+			struct {
+				BYTE data16_is_present : 1;
+				BYTE data17_is_present : 1;
+				BYTE data18_is_present : 1;
+				BYTE data19_is_present : 1;
+				BYTE data20_is_present : 1;
+				BYTE data21_is_present : 1;
+				BYTE data22_is_present : 1;
+				BYTE data23_is_present : 1;
+			};
+#pragma pack(pop)
 		};
 	};
 } RMI4_F12_QUERY_8_REGISTER, * PRMI4_F12_QUERY_8_REGISTER;
 
-typedef struct _RMI4_F12_CONTROL_20_REGISTER
+typedef struct _RMI4_F12_FINGER_REPORT_REGISTER
 {
 	union {
 		BYTE Data[3];
 		struct
 		{
+			BYTE ReportingFlags;
 			BYTE SupressXCoordinate;
 			BYTE SuppressYCoordinate;
-			BYTE ReportingFlags;
 		};
 	};
-} RMI4_F12_CONTROL_20_REGISTER, * PRMI4_F12_CONTROL_20_REGISTER;
+} RMI4_F12_FINGER_REPORT_REGISTER, * PRMI4_F12_FINGER_REPORT_REGISTER;
 
-typedef struct _RMI4_F12_CONTROL_23_REGISTER
+typedef struct _RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER
 {
 	union {
 		BYTE Data[5];
@@ -282,4 +419,4 @@ typedef struct _RMI4_F12_CONTROL_23_REGISTER
 			};
 		};
 	};
-} RMI4_F12_CONTROL_23_REGISTER, * PRMI4_F12_CONTROL_23_REGISTER;
+} RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER, * PRMI4_F12_OBJECT_REPORT_ENABLE_REGISTER;

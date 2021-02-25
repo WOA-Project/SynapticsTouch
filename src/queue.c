@@ -100,6 +100,12 @@ Return Value:
     switch(IoControlCode) {
 
     case IOCTL_HID_GET_DEVICE_DESCRIPTOR:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_GET_DEVICE_DESCRIPTOR");
+
         //
         // Retrieves master HID descriptor 
         //
@@ -107,6 +113,12 @@ Return Value:
         break;
 
     case IOCTL_HID_GET_DEVICE_ATTRIBUTES:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_GET_DEVICE_ATTRIBUTES");
+
         //
         // Retrieves device attributes in a HID_DEVICE_ATTRIBUTES structure
         //
@@ -114,6 +126,12 @@ Return Value:
         break;
 
     case IOCTL_HID_GET_REPORT_DESCRIPTOR:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_GET_REPORT_DESCRIPTOR");
+
         //
         // Obtains the report descriptor for the HID device
         //
@@ -121,6 +139,12 @@ Return Value:
         break;
 
     case IOCTL_HID_GET_STRING:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_GET_STRING");
+
         //
         // Obtains strings associated with the HID device
         //
@@ -128,6 +152,12 @@ Return Value:
         break;
 
     case IOCTL_HID_READ_REPORT:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_READ_REPORT");
+
         //
         // Dangling read requests for passing up touch data
         //
@@ -135,6 +165,12 @@ Return Value:
         break;
     
     case IOCTL_HID_SET_FEATURE:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_SET_FEATURE");
+
         //
         // This sends a HID class feature report to a top-level collection of
         // a HID class device.
@@ -143,6 +179,12 @@ Return Value:
         break;
     
     case IOCTL_HID_GET_FEATURE:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_GET_FEATURE");
+
         //
         // Returns a feature report associated with a top-level collection
         //
@@ -150,6 +192,12 @@ Return Value:
         break;
 
     case IOCTL_HID_SEND_IDLE_NOTIFICATION_REQUEST:    
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_SEND_IDLE_NOTIFICATION_REQUEST");
+
         //
         // Hidclass sends this IOCTL to notify miniports that it wants
         // them to go into idle
@@ -158,20 +206,43 @@ Return Value:
         break;
 
     case IOCTL_HID_WRITE_REPORT:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_WRITE_REPORT");
+
         //
         // Transmits a class driver-supplied report to the device.
         //    
     case IOCTL_HID_ACTIVATE_DEVICE:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_ACTIVATE_DEVICE");
+
         //
         // Makes the device ready for I/O operations.
         //
     case IOCTL_HID_DEACTIVATE_DEVICE:
+
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID_DEACTIVATE_DEVICE");
+
         //
         // Causes the device to cease operations and terminate all outstanding
         // I/O requests.
         //
 
     default:
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_HID,
+            "IOCTL_HID UNKNOWN");
+
         status = STATUS_NOT_SUPPORTED;
         break;
     }

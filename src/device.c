@@ -7,6 +7,7 @@
 #include <device.h>
 #include <spb.h>
 #include <idle.h>
+#include <hid.h>
 #include <device.tmh>
 
 #ifdef ALLOC_PRAGMA
@@ -99,7 +100,7 @@ OnInterruptIsr(
 
         if (!NT_SUCCESS(status))
         {
-            Trace(
+            STDebugPrint(
                 TRACE_LEVEL_ERROR,
                 TRACE_REPORTING,
                 "No request pending from HIDClass, ignoring report - %!STATUS!",
@@ -121,7 +122,7 @@ OnInterruptIsr(
 
         if (!NT_SUCCESS(status))
         {
-            Trace(
+            STDebugPrint(
                 TRACE_LEVEL_VERBOSE,
                 TRACE_SAMPLES,
                 "Error retrieving HID read request output buffer - %!STATUS!",
@@ -136,7 +137,7 @@ OnInterruptIsr(
             {
                 status = STATUS_BUFFER_TOO_SMALL;
     
-                Trace(
+                STDebugPrint(
                     TRACE_LEVEL_VERBOSE,
                     TRACE_SAMPLES,
                     "Error HID read request buffer is too small (%I64x bytes) - %!STATUS!",
@@ -194,7 +195,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
             "Error setting device to D0 - %!STATUS!",
@@ -252,7 +253,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
             "Error exiting D0 - %!STATUS!", 
@@ -325,7 +326,7 @@ OnPrepareHardware(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error finding CmResourceTypeConnection resource - %!STATUS!",
@@ -341,7 +342,7 @@ OnPrepareHardware(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error in Spb initialization - %!STATUS!", 
@@ -357,7 +358,7 @@ OnPrepareHardware(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error allocating touch context - %!STATUS!", 
@@ -375,7 +376,7 @@ OnPrepareHardware(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error retrieving controller settings from registry - %!STATUS!",
@@ -391,7 +392,7 @@ OnPrepareHardware(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error starting touch device - %!STATUS!",
@@ -441,7 +442,7 @@ OnReleaseHardware(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_PNP,
             "Error stopping device - %!STATUS!",
@@ -452,7 +453,7 @@ OnReleaseHardware(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_PNP,
             "Error freeing touch context - %!STATUS!",

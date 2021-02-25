@@ -21,7 +21,7 @@
 --*/
 
 #include <compat.h>
-#include <rmiinternal.h>
+#include <rmi4\rmiinternal.h>
 #include <registry.tmh>
 
 //
@@ -596,7 +596,7 @@ TchRegistryGetControllerSettings(
   
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Error opening device registry key - %!STATUS!",
@@ -614,7 +614,7 @@ TchRegistryGetControllerSettings(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Error opening device registry subkey - %!STATUS!",
@@ -627,7 +627,7 @@ TchRegistryGetControllerSettings(
 
     if (NULL == hKey)
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Error getting WDM handle to WDF subkey");
@@ -673,7 +673,7 @@ TchRegistryGetControllerSettings(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Error retrieving registry configuration - %!STATUS!",
@@ -695,7 +695,7 @@ exit:
             &gDefaultConfiguration,
             sizeof(RMI4_CONFIGURATION));
 
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_WARNING,
             TRACE_REGISTRY,
             "Error reading registry config, using defaults! - %!STATUS!",

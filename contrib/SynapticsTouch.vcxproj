@@ -426,6 +426,8 @@
     <ClCompile Include="..\src\report.c" />
     <ClCompile Include="..\src\resolutions.c" />
     <ClCompile Include="..\src\spb.c" />
+    <ClCompile Include="..\src\rmi4\rmiinternal.c" />
+    <ClCompile Include="..\src\rmi4\f01\function01.c" />
     <ClCompile Include="..\src\rmi4\f12\function12.c" />
   </ItemGroup>
   <ItemGroup>
@@ -445,9 +447,10 @@
     <ClInclude Include="..\include\queue.h" />
     <ClInclude Include="..\include\resolutions.h" />
     <ClInclude Include="..\include\resource.h" />
-    <ClInclude Include="..\include\rmiinternal.h" />
     <ClInclude Include="..\include\spb.h" />
     <ClInclude Include="..\include\trace.h" />
+    <ClInclude Include="..\include\rmi4\rmiinternal.h" />
+    <ClInclude Include="..\include\rmi4\f01\function01.h" />
     <ClInclude Include="..\include\rmi4\f12\controlregisters.h" />
     <ClInclude Include="..\include\rmi4\f12\function12.h" />
   </ItemGroup>

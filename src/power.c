@@ -20,129 +20,10 @@
 
 #include <compat.h>
 #include <controller.h>
-#include <rmiinternal.h>
 #include <spb.h>
+#include <rmi4\rmiinternal.h>
+#include <rmi4\f01\function01.h>
 #include <power.tmh>
-
-NTSTATUS
-RmiChangeSleepState(
-   IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-   IN SPB_CONTEXT *SpbContext,
-   IN UCHAR SleepState
-   )
-/*++
-
-Routine Description:
-
-   Changes the SleepMode bits on the controller as specified
-
-Arguments:
-
-   ControllerContext - Touch controller context
-   
-   SpbContext - A pointer to the current i2c context
-
-   SleepState - Either RMI4_F11_DEVICE_CONTROL_SLEEP_MODE_OPERATING
-                or RMI4_F11_DEVICE_CONTROL_SLEEP_MODE_SLEEPING
-
-Return Value:
-
-   NTSTATUS indicating success or failure
-
---*/
-{
-    RMI4_F01_CTRL_REGISTERS* controlF01;
-    UCHAR deviceControl;
-    int index;
-    NTSTATUS status;
-
-    controlF01 = (RMI4_F01_CTRL_REGISTERS*) &deviceControl;
-
-    //
-    // Find RMI device control function housing sleep settings
-    // 
-    index = RmiGetFunctionIndex(
-        ControllerContext->Descriptors,
-        ControllerContext->FunctionCount,
-        RMI4_F01_RMI_DEVICE_CONTROL);
-
-    if (index == ControllerContext->FunctionCount)
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_POWER,
-            "Power change failure - RMI Function 01 missing");
-
-        status = STATUS_INVALID_DEVICE_STATE;
-        goto exit;
-    }
-
-    status = RmiChangePage(
-        ControllerContext,
-        SpbContext,
-        ControllerContext->FunctionOnPage[index]);
-
-    if (!NT_SUCCESS(status))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_POWER,
-            "Could not change register page");
-
-        goto exit;
-    }
-
-    //
-    // Read Device Control register
-    //
-    status = SpbReadDataSynchronously(
-        SpbContext,
-        ControllerContext->Descriptors[index].ControlBase,
-        &deviceControl,
-        sizeof(deviceControl)
-        );
-
-    if (!NT_SUCCESS(status))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_POWER,
-            "Could not read sleep register - %!STATUS!",
-            status);
-
-        goto exit;
-    }
-
-    //
-    // Assign new sleep state
-    //
-    controlF01->DeviceControl.SleepMode = SleepState;
-
-    //
-    // Write setting back to the controller
-    //
-    status = SpbWriteDataSynchronously(
-        SpbContext,
-        ControllerContext->Descriptors[index].ControlBase,
-        &deviceControl,
-        sizeof(deviceControl)
-        );
-
-    if (!NT_SUCCESS(status))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_POWER,
-            "Could not write sleep register - %X",
-            status);
-
-        goto exit;
-    }
-
-exit:
-
-    return status;
-}
 
 NTSTATUS 
 TchWakeDevice(
@@ -192,7 +73,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
             "Error waking touch controller - %!STATUS!",
@@ -249,7 +130,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
             "Error sleeping touch controller - %!STATUS!",

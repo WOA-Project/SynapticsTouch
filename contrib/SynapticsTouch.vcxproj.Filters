@@ -22,14 +22,26 @@
     <Filter Include="Header Files\rmi4">
       <UniqueIdentifier>{25a03d17-1f9e-4421-b353-801788d1c380}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\rmi4\f01">
+      <UniqueIdentifier>{f3920f54-b616-498f-9377-cefd1c789873}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files\rmi4\f12">
       <UniqueIdentifier>{d467d6ef-678f-4f2c-8c0e-42751577eb09}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\rmi4">
       <UniqueIdentifier>{4c9fff5f-d00e-4bd1-913e-ee2acf06c9cc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rmi4\f01">
+      <UniqueIdentifier>{f248cf4a-fbcb-42b4-a5d6-d686dcd7efcd}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\rmi4\f12">
       <UniqueIdentifier>{660990c9-ba4a-4d94-a03e-6a98796c6862}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\rmi4\f1a">
+      <UniqueIdentifier>{cd354273-3e00-4a87-9300-d552b208ac7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\rmi4\f1a">
+      <UniqueIdentifier>{55b3667f-7236-4ab2-8d47-079512a3f281}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -71,6 +83,12 @@
     </ClCompile>
     <ClCompile Include="..\src\spb.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\rmi4\rmiinternal.c">
+      <Filter>Source Files\rmi4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\rmi4\f01\function01.c">
+      <Filter>Source Files\rmi4\f01</Filter>
     </ClCompile>
     <ClCompile Include="..\src\rmi4\f12\function12.c">
       <Filter>Source Files\rmi4\f12</Filter>
@@ -114,9 +132,6 @@
     <ClInclude Include="..\include\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\rmiinternal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\spb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -134,6 +149,12 @@
     </ClInclude>
     <ClInclude Include="..\include\HidCommon.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\rmi4\rmiinternal.h">
+      <Filter>Header Files\rmi4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\rmi4\f01\function01.h">
+      <Filter>Header Files\rmi4\f01</Filter>
     </ClInclude>
     <ClInclude Include="..\include\rmi4\f12\controlregisters.h">
       <Filter>Header Files\rmi4\f12</Filter>

@@ -1,26 +1,414 @@
 // Copyright (c) Microsoft Corporation. All Rights Reserved. 
 // Copyright (c) Bingxing Wang. All Rights Reserved. 
+// Copyright (c) LumiaWOA authors. All Rights Reserved. 
 
 #include <compat.h>
 #include <controller.h>
-#include <rmiinternal.h>
 #include <HidCommon.h>
 #include <spb.h>
+#include <rmi4\rmiinternal.h>
 #include <rmi4\f12\controlregisters.h>
 #include <rmi4\f12\function12.h>
 #include <function12.tmh>
 
+
 NTSTATUS
-RmiConfigureReportingModes(
+RmiSetReportingFlagsF12(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext,
+	IN UCHAR NewMode,
+	OUT UCHAR* OldMode
+)
+/*++
+
+	Routine Description:
+
+		Changes the F12 Reporting Mode on the controller as specified
+
+	Arguments:
+
+		ControllerContext - Touch controller context
+
+		SpbContext - A pointer to the current i2c context
+
+		NewMode - Either RMI_F12_REPORTING_MODE_CONTINUOUS
+				  or RMI_F12_REPORTING_MODE_REDUCED
+
+		OldMode - Old value of reporting mode
+
+	Return Value:
+
+		NTSTATUS indicating success or failure
+
+--*/
+{
+	RMI4_F12_FINGER_REPORT_REGISTER reportingControl = { 0 };
+	int index;
+	NTSTATUS status;
+	UINT8 indexCtrl20;
+
+	RtlZeroMemory(&reportingControl, sizeof(RMI4_F12_FINGER_REPORT_REGISTER));
+
+	//
+	// Find RMI F12 function
+	//
+	index = RmiGetFunctionIndex(
+		ControllerContext->Descriptors,
+		ControllerContext->FunctionCount,
+		RMI4_F12_2D_TOUCHPAD_SENSOR);
+
+	if (index == ControllerContext->FunctionCount)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Set ReportingMode failure - RMI Function 12 missing");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	status = RmiChangePage(
+		ControllerContext,
+		SpbContext,
+		ControllerContext->FunctionOnPage[index]);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not change register page");
+
+		goto exit;
+	}
+
+	indexCtrl20 = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, F12_2D_CTRL20);
+
+	if (indexCtrl20 == ControllerContext->ControlRegDesc.NumRegisters)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Cannot find F12_2D_Ctrl20 offset");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	if (ControllerContext->ControlRegDesc.Registers[indexCtrl20].RegisterSize != sizeof(RMI4_F12_FINGER_REPORT_REGISTER))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Unexpected F12_2D_Ctrl20 register size");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	//
+	// Read Device Control register
+	//
+	status = SpbReadDataSynchronously(
+		SpbContext,
+		ControllerContext->Descriptors[index].ControlBase + indexCtrl20,
+		&reportingControl,
+		sizeof(reportingControl)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not read F12_2D_Ctrl20 register - %!STATUS!",
+			status);
+
+		goto exit;
+	}
+
+	if (OldMode)
+	{
+		*OldMode = reportingControl.ReportingFlags;
+	}
+
+	//
+	// Assign new value
+	//
+	reportingControl.ReportingFlags = NewMode;
+
+	//
+	// Write setting back to the controller
+	//
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		ControllerContext->Descriptors[index].ControlBase + indexCtrl20,
+		&reportingControl,
+		sizeof(RMI4_F12_FINGER_REPORT_REGISTER)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write F12_2D_Ctrl20 register - %X",
+			status);
+
+		goto exit;
+	}
+
+exit:
+
+	return status;
+}
+
+NTSTATUS
+RmiGetReportingConfigurationF12(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext,
+	OUT PRMI4_F12_OBJECT_REPORT_ENABLE_REGISTER ControlRegisterData
+)
+{
+	int index;
+	NTSTATUS status;
+	UINT8 indexCtrl23;
+
+	NT_ASSERT(ControlRegisterData != NULL);
+
+	//
+	// Find RMI F12 function
+	//
+	index = RmiGetFunctionIndex(
+		ControllerContext->Descriptors,
+		ControllerContext->FunctionCount,
+		RMI4_F12_2D_TOUCHPAD_SENSOR);
+
+	if (index == ControllerContext->FunctionCount)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Set ReportingMode failure - RMI Function 12 missing");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	status = RmiChangePage(
+		ControllerContext,
+		SpbContext,
+		ControllerContext->FunctionOnPage[index]);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not change register page");
+
+		goto exit;
+	}
+
+	indexCtrl23 = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, F12_2D_CTRL23);
+
+	if (indexCtrl23 == ControllerContext->ControlRegDesc.NumRegisters)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Cannot find F12_2D_Ctrl23 offset");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	if (ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize != sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Unexpected F12_2D_Ctrl23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	//
+	// Read Device Control register
+	//
+	status = SpbReadDataSynchronously(
+		SpbContext,
+		ControllerContext->Descriptors[index].ControlBase + indexCtrl23,
+		ControlRegisterData,
+		sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not read F12_2D_Ctrl23 register - %!STATUS!",
+			status);
+
+		goto exit;
+	}
+
+exit:
+
+	return status;
+}
+
+NTSTATUS
+RmiSetReportingConfigurationF12(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext,
+	IN PRMI4_F12_OBJECT_REPORT_ENABLE_REGISTER ControlRegisterData
+)
+{
+	int index;
+	NTSTATUS status;
+	UINT8 indexCtrl23;
+
+	//
+	// Find RMI F12 function
+	//
+	index = RmiGetFunctionIndex(
+		ControllerContext->Descriptors,
+		ControllerContext->FunctionCount,
+		RMI4_F12_2D_TOUCHPAD_SENSOR);
+
+	if (index == ControllerContext->FunctionCount)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Set ReportingMode failure - RMI Function 12 missing");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	status = RmiChangePage(
+		ControllerContext,
+		SpbContext,
+		ControllerContext->FunctionOnPage[index]);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not change register page");
+
+		goto exit;
+	}
+
+	indexCtrl23 = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, F12_2D_CTRL23);
+
+	if (indexCtrl23 == ControllerContext->ControlRegDesc.NumRegisters)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Cannot find F12_2D_Ctrl23 offset");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	if (ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize != sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Unexpected F12_2D_Ctrl23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	//
+	// Write setting back to the controller
+	//
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		ControllerContext->Descriptors[index].ControlBase + indexCtrl23,
+		ControlRegisterData,
+		sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write F12_2D_Ctrl23 register - %X",
+			status);
+
+		goto exit;
+	}
+
+exit:
+
+	return status;
+}
+
+NTSTATUS
+RmiConfigureControlRegisterF12(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext,
+	USHORT RegisterIndex
+)
+{
+	NTSTATUS status = STATUS_SUCCESS;
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"Configuring $12 Control Register F12_2D_CTRL%d",
+		RegisterIndex);
+
+	switch (RegisterIndex)
+	{
+	case F12_2D_CTRL20:
+		status = RmiSetReportingFlagsF12(
+			ControllerContext,
+			SpbContext,
+			RMI4_F12_REPORTING_CONTINUOUS_MODE,
+			NULL
+		);
+		break;
+	case F12_2D_CTRL23:
+		status = RmiConfigureReportingF12(
+			ControllerContext,
+			SpbContext
+		);
+		break;
+	default:
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Skipped configuring $12 Control Register F12_2D_CTRL%d as the driver does not support it.",
+			RegisterIndex);
+	}
+
+	return status;
+}
+
+NTSTATUS
+RmiConfigureReportingF12(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
 	IN SPB_CONTEXT* SpbContext
 )
 {
 	NTSTATUS status;
-	RMI4_F12_CONTROL_23_REGISTER ControlRegisterData = { 0 };
-	RtlZeroMemory(&ControlRegisterData, sizeof(RMI4_F12_CONTROL_23_REGISTER));
+	RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER ControlRegisterData = { 0 };
+	RtlZeroMemory(&ControlRegisterData, sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER));
 
-	status = RmiGetReporting(
+	status = RmiGetReportingConfigurationF12(
 		ControllerContext,
 		SpbContext,
 		&ControlRegisterData
@@ -28,179 +416,179 @@ RmiConfigureReportingModes(
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"RmiGetReporting - %!STATUS!",
+			"RmiConfigureReportingF12 - %!STATUS!",
 			status);
 
 		goto exit;
 	}
 
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Current Controller Reporting Configuration:"
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Reported Object Count: %d",
 		ControlRegisterData.ReportedObjectCount
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"--== Reported Objects ==--"
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Finger: %d",
 		ControlRegisterData.FingerReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		" "
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Active Stylus: %d",
 		ControlRegisterData.ActiveStylusReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Cover: %d",
 		ControlRegisterData.CoverReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Eraser: %d",
 		ControlRegisterData.EraserReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Gloved Finger: %d",
 		ControlRegisterData.GlovedFingerReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Hovering Finger: %d",
 		ControlRegisterData.HoveringFingerReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Palm: %d",
 		ControlRegisterData.PalmReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Small Object: %d",
 		ControlRegisterData.SmallObjectReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Stylus: %d",
 		ControlRegisterData.StylusReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Unclassified Object: %d",
 		ControlRegisterData.UnclassifiedObjectReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Hand Edge: %d",
 		ControlRegisterData.HandEdgeReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Narrow Object Swipe: %d",
 		ControlRegisterData.NarrowObjectReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		" "
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"--== Reported As Finger ==--"
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Active Stylus: %d",
 		ControlRegisterData.ReportActiveStylusAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Cover: %d",
 		ControlRegisterData.ReportCoverAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Eraser: %d",
 		ControlRegisterData.ReportEraserAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Gloved Finger: %d",
 		ControlRegisterData.ReportGlovedFingerAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Hovering Finger: %d",
 		ControlRegisterData.ReportHoveringFingerAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Palm: %d",
 		ControlRegisterData.ReportPalmAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Small Object: %d",
 		ControlRegisterData.ReportSmallObjectAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Stylus: %d",
 		ControlRegisterData.ReportStylusAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Unclassified Object: %d",
 		ControlRegisterData.ReportUnclassifiedObjectAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Hand Edge: %d",
 		ControlRegisterData.ReportHandEdgeAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Narrow Object Swipe: %d",
@@ -246,177 +634,177 @@ RmiConfigureReportingModes(
 	ControlRegisterData.ReportNarrowObjectSwipeAsFinger = 0;
 	ControlRegisterData.ReportHandEdgeAsFinger = 0;
 
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"New Controller Reporting Configuration:"
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Reported Object Count: %d",
 		ControlRegisterData.ReportedObjectCount
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"--== Reported Objects ==--"
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Finger: %d",
 		ControlRegisterData.FingerReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		" "
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Active Stylus: %d",
 		ControlRegisterData.ActiveStylusReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Cover: %d",
 		ControlRegisterData.CoverReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Eraser: %d",
 		ControlRegisterData.EraserReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Gloved Finger: %d",
 		ControlRegisterData.GlovedFingerReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Hovering Finger: %d",
 		ControlRegisterData.HoveringFingerReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Palm: %d",
 		ControlRegisterData.PalmReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Small Object: %d",
 		ControlRegisterData.SmallObjectReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Stylus: %d",
 		ControlRegisterData.StylusReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Unclassified Object: %d",
 		ControlRegisterData.UnclassifiedObjectReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Hand Edge: %d",
 		ControlRegisterData.HandEdgeReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Narrow Object Swipe: %d",
 		ControlRegisterData.NarrowObjectReportingEnabled
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		" "
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"--== Reported As Finger ==--"
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Active Stylus: %d",
 		ControlRegisterData.ReportActiveStylusAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Cover: %d",
 		ControlRegisterData.ReportCoverAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Eraser: %d",
 		ControlRegisterData.ReportEraserAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Gloved Finger: %d",
 		ControlRegisterData.ReportGlovedFingerAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Hovering Finger: %d",
 		ControlRegisterData.ReportHoveringFingerAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Palm: %d",
 		ControlRegisterData.ReportPalmAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Small Object: %d",
 		ControlRegisterData.ReportSmallObjectAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Stylus: %d",
 		ControlRegisterData.ReportStylusAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Unclassified Object: %d",
 		ControlRegisterData.ReportUnclassifiedObjectAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Hand Edge: %d",
 		ControlRegisterData.ReportHandEdgeAsFinger
 	);
-	Trace(
+	STDebugPrint(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Narrow Object Swipe: %d",
 		ControlRegisterData.ReportNarrowObjectSwipeAsFinger
 	);
 
-	status = RmiSetReporting(
+	status = RmiSetReportingConfigurationF12(
 		ControllerContext,
 		SpbContext,
 		&ControlRegisterData
@@ -424,10 +812,10 @@ RmiConfigureReportingModes(
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"RmiSetReporting - %!STATUS!",
+			"RmiConfigureReportingF12 - %!STATUS!",
 			status);
 
 		goto exit;
@@ -440,7 +828,132 @@ exit:
 }
 
 NTSTATUS
-RmiConfigureFunction12(
+RmiConfigureControlRegistersF12(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext
+)
+{
+	NTSTATUS status;
+	RMI4_F12_QUERY_5_REGISTER Query5Reg = { 0 };
+	RtlZeroMemory(&Query5Reg, sizeof(RMI4_F12_QUERY_5_REGISTER));
+
+	/*
+		Lumia 950s (Retail) should have
+		the following control registers:
+
+		 8*  9* 10*  15(finger amplitude threshold) 18*
+		 11(jitter level) 12   20(lpwg mode) 22 23(object report enable) 24 25
+		26(glove mode) 27(lpwg mode - report rate) 28(report data) 29 30 33 34 35 36 37 38 39 40
+	*/
+
+	status = RmiGetSupportedControlRegistersF12(
+		ControllerContext,
+		SpbContext,
+		&Query5Reg);
+
+	if (!NT_SUCCESS(status)) {
+
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Failed to read the Query 5 Register - %!STATUS!",
+			status);
+		goto exit;
+	}
+
+	for (USHORT i = 0; i < (sizeof(Query5Reg.Data) - 1) * 8; i++)
+	{
+		DWORD RegisterMask = (1 << (i % 8));
+		DWORD DataIndex = (i - (i % 8)) / 8 + 1;
+
+		if ((Query5Reg.Data[DataIndex] & RegisterMask) == RegisterMask)
+		{
+			STDebugPrint(
+				TRACE_LEVEL_ERROR,
+				TRACE_INIT,
+				"Discovered $12 Control Register F12_2D_CTRL%d",
+				i);
+
+			status = RmiConfigureControlRegisterF12(
+				ControllerContext,
+				SpbContext,
+				i
+			);
+
+			if (!NT_SUCCESS(status)) {
+
+				STDebugPrint(
+					TRACE_LEVEL_ERROR,
+					TRACE_INIT,
+					"Failed to configure $12 Control Register F12_2D_CTRL%d - %!STATUS!",
+					i,
+					status);
+				goto exit;
+			}
+		}
+	}
+
+exit:
+	return status;
+}
+
+NTSTATUS
+RmiQueryDataRegistersF12(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext
+)
+{
+	NTSTATUS status;
+	RMI4_F12_QUERY_8_REGISTER Query8Reg = { 0 };
+	RtlZeroMemory(&Query8Reg, sizeof(RMI4_F12_QUERY_8_REGISTER));
+
+	/*
+		Lumia 950s (Retail) should have
+		the following data registers:
+
+		1 - ok
+		2
+		4  (GESTURE_REPORT_DATA)
+		13
+		15 (FINGER_REPORT_DATA)
+	*/
+
+	status = RmiGetSupportedDataRegistersF12(
+		ControllerContext,
+		SpbContext,
+		&Query8Reg);
+
+	if (!NT_SUCCESS(status)) {
+
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Failed to read the Query 5 Register - %!STATUS!",
+			status);
+		goto exit;
+	}
+
+	for (USHORT i = 0; i < (sizeof(Query8Reg.Data) - 1) * 8; i++)
+	{
+		DWORD RegisterMask = (1 << (i % 8));
+		DWORD DataIndex = (i - (i % 8)) / 8 + 1;
+
+		if ((Query8Reg.Data[DataIndex] & RegisterMask) == RegisterMask)
+		{
+			STDebugPrint(
+				TRACE_LEVEL_ERROR,
+				TRACE_INIT,
+				"Discovered $12 Data Register F12_2D_DATA%d",
+				i);
+		}
+	}
+
+exit:
+	return status;
+}
+
+NTSTATUS
+RmiConfigureF12(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
 	IN SPB_CONTEXT* SpbContext
 )
@@ -453,12 +966,6 @@ RmiConfigureFunction12(
 	USHORT data_offset = 0;
 	PRMI_REGISTER_DESC_ITEM item;
 
-	RMI4_F12_QUERY_5_REGISTER Query5Reg = { 0 };
-	RMI4_F12_QUERY_8_REGISTER Query8Reg = { 0 };
-
-	RtlZeroMemory(&Query5Reg, sizeof(RMI4_F12_QUERY_5_REGISTER));
-	RtlZeroMemory(&Query8Reg, sizeof(RMI4_F12_QUERY_8_REGISTER));
-
 	//
 	// Find 2D touch sensor function and configure it
 	//
@@ -469,7 +976,7 @@ RmiConfigureFunction12(
 
 	if (index == ControllerContext->FunctionCount)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Unexpected - RMI Function 12 missing");
@@ -485,7 +992,7 @@ RmiConfigureFunction12(
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not change register page");
@@ -504,7 +1011,7 @@ RmiConfigureFunction12(
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Failed to read general info register - %!STATUS!",
@@ -516,7 +1023,7 @@ RmiConfigureFunction12(
 
 	if (!(buf & BIT(0)))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Behavior of F12 without register descriptors is undefined."
@@ -536,7 +1043,7 @@ RmiConfigureFunction12(
 
 	if (!NT_SUCCESS(status)) {
 
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Failed to read the Query Register Descriptor - %!STATUS!",
@@ -554,7 +1061,7 @@ RmiConfigureFunction12(
 
 	if (!NT_SUCCESS(status)) {
 
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Failed to read the Control Register Descriptor - %!STATUS!",
@@ -571,7 +1078,7 @@ RmiConfigureFunction12(
 
 	if (!NT_SUCCESS(status)) {
 
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Failed to read the Data Register Descriptor - %!STATUS!",
@@ -583,38 +1090,37 @@ RmiConfigureFunction12(
 		&ControllerContext->DataRegDesc
 	);
 
-	status = RmiGetQuery5(
+	status = RmiConfigureControlRegistersF12(
 		ControllerContext,
-		SpbContext,
-		&Query5Reg);
+		SpbContext
+	);
 
 	if (!NT_SUCCESS(status)) {
 
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to read the Query 5 Data Register - %!STATUS!",
+			"Failed to configure $12 Control Registers - %!STATUS!",
+			status);
+		goto exit;
+	}
+
+	status = RmiQueryDataRegistersF12(
+		ControllerContext,
+		SpbContext
+	);
+
+	if (!NT_SUCCESS(status)) {
+
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Failed to query $12 Data Registers - %!STATUS!",
 			status);
 		goto exit;
 	}
 
 	// Skip rmi_f12_read_sensor_tuning for the prototype.
-
-	//
-	// Try to set continuous reporting mode during touch
-	//
-	RmiSetReportingMode(
-		ControllerContext,
-		SpbContext,
-		RMI_F12_REPORTING_MODE_CONTINUOUS,
-		NULL);
-
-	//
-	// Try to set new configuration for reporting
-	//
-	RmiConfigureReportingModes(
-		ControllerContext,
-		SpbContext);
 
 	/*
 	* Figure out what data is contained in the data registers. HID devices
@@ -629,38 +1135,38 @@ RmiConfigureFunction12(
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 1);
 	if (item != NULL)
 	{
-		ControllerContext->HasData1 = TRUE;
 		ControllerContext->Data1Offset = data_offset;
+		ControllerContext->Data1Size = (USHORT)item->RegisterSize;
 
 		data_offset += (USHORT)item->RegisterSize;
 	}
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 2);
-	if (item) data_offset += (USHORT)item->RegisterSize;
+	if (item != NULL)
+	{
+		ControllerContext->Data2Offset = data_offset;
+		ControllerContext->Data2Size = (USHORT)item->RegisterSize;
+
+		data_offset += (USHORT)item->RegisterSize;
+	}
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 3);
 	if (item) data_offset += (USHORT)item->RegisterSize;
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 4);
-	if (item) data_offset += (USHORT)item->RegisterSize;
+	if (item != NULL)
+	{
+		ControllerContext->Data4Offset = data_offset;
+		ControllerContext->Data4Size = (USHORT)item->RegisterSize;
+
+		data_offset += (USHORT)item->RegisterSize;
+	}
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 5);
-	if (item != NULL)
-	{
-		ControllerContext->HasData5 = TRUE;
-		ControllerContext->Data5Offset = data_offset;
-
-		data_offset += (USHORT)item->RegisterSize;
-	}
+	if (item) data_offset += (USHORT)item->RegisterSize;
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 6);
-	if (item != NULL)
-	{
-		ControllerContext->HasData6 = TRUE;
-		ControllerContext->Data6Offset = data_offset;
-
-		data_offset += (USHORT)item->RegisterSize;
-	}
+	if (item) data_offset += (USHORT)item->RegisterSize;
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 7);
 	if (item) data_offset += (USHORT)item->RegisterSize;
@@ -669,13 +1175,7 @@ RmiConfigureFunction12(
 	if (item) data_offset += (USHORT)item->RegisterSize;
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 9);
-	if (item != NULL)
-	{
-		ControllerContext->HasData9 = TRUE;
-		ControllerContext->Data9Offset = data_offset;
-
-		data_offset += (USHORT)item->RegisterSize;
-	}
+	if (item) data_offset += (USHORT)item->RegisterSize;
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 10);
 	if (item) data_offset += (USHORT)item->RegisterSize;
@@ -687,7 +1187,13 @@ RmiConfigureFunction12(
 	if (item) data_offset += (USHORT)item->RegisterSize;
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 13);
-	if (item) data_offset += (USHORT)item->RegisterSize;
+	if (item != NULL)
+	{
+		ControllerContext->Data13Offset = data_offset;
+		ControllerContext->Data13Size = (USHORT)item->RegisterSize;
+
+		data_offset += (USHORT)item->RegisterSize;
+	}
 
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 14);
 	if (item) data_offset += (USHORT)item->RegisterSize;
@@ -695,8 +1201,8 @@ RmiConfigureFunction12(
 	item = RmiGetRegisterDescItem(&ControllerContext->DataRegDesc, 15);
 	if (item != NULL)
 	{
-		ControllerContext->HasData15 = TRUE;
 		ControllerContext->Data15Offset = data_offset;
+		ControllerContext->Data15Size   = (USHORT)item->RegisterSize;
 
 		data_offset += (USHORT)item->RegisterSize;
 	}
@@ -706,10 +1212,10 @@ exit:
 }
 
 NTSTATUS
-RmiGetTouchesFromController(
+RmiGetObjectsFromControllerF12(
 	IN VOID* ControllerContext,
 	IN SPB_CONTEXT* SpbContext,
-	IN RMI4_F11_DATA_REGISTERS* Data
+	IN RMI4_DETECTED_OBJECTS* Data
 )
 /*++
 
@@ -734,11 +1240,9 @@ Return Value:
 	NTSTATUS status;
 	RMI4_CONTROLLER_CONTEXT* controller;
 
-	int index, i, x, y, fingers, pens;
+	int index, i, x, y;
 
-	BYTE fingerStatus[RMI4_MAX_TOUCHES] = { 0 };
-	BYTE penStatus[RMI4_MAX_TOUCHES] = { 0 };
-	PRMI4_F12_DATA_1_REGISTER controllerData = NULL;
+	PRMI4_F12_FINGER_DATA_REGISTER controllerData = NULL;
 
 	controller = (RMI4_CONTROLLER_CONTEXT*)ControllerContext;
 
@@ -752,7 +1256,7 @@ Return Value:
 
 	if (index == controller->FunctionCount)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Unexpected - RMI Function 12 missing");
@@ -768,7 +1272,7 @@ Return Value:
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not change register page");
@@ -778,7 +1282,7 @@ Return Value:
 
 	controllerData = ExAllocatePoolWithTag(
 		NonPagedPoolNx,
-		(ULONG)(controller->MaxFingers * sizeof(RMI4_F12_DATA_1_REGISTER)),
+		(ULONG)(controller->MaxFingers * sizeof(RMI4_F12_FINGER_DATA_REGISTER)),
 		TOUCH_POOL_TAG_F12
 	);
 
@@ -795,12 +1299,12 @@ Return Value:
 		SpbContext,
 		controller->Descriptors[index].DataBase + (BYTE)controller->Data1Offset,
 		controllerData,
-		(ULONG)(controller->MaxFingers * sizeof(RMI4_F12_DATA_1_REGISTER))
+		(ULONG)(controller->MaxFingers * sizeof(RMI4_F12_FINGER_DATA_REGISTER))
 	);
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
 			"Error reading finger status data - %!STATUS!",
@@ -809,101 +1313,92 @@ Return Value:
 		goto free_buffer;
 	}
 
-	fingers = 0;
-	pens = 0;
-
 	for (i = 0; i < controller->MaxFingers; i++)
 	{
 		switch (controllerData[i].ObjectTypeAndStatus)
 		{
-		case RMI4_F12_OBJECT_FINGER:
-			fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
-			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
-			fingers++;
+		case (BYTE)RMI4_F12_OBJECT_FINGER:
+			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
+			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INTERRUPT,
 				"Finger[%d] status is finger",
 				i);
 
 			break;
-		case RMI4_F12_OBJECT_HOVERING_FINGER:
-			fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
-			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
-			fingers++;
+		case (BYTE)RMI4_F12_OBJECT_HOVERING_FINGER:
+			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
+			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INTERRUPT,
 				"Finger[%d] status is hovering finger",
 				i);
 
 			break;
-		case RMI4_F12_OBJECT_GLOVED_FINGER:
-			fingerStatus[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
-			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
-			fingers++;
+		case (BYTE)RMI4_F12_OBJECT_GLOVED_FINGER:
+			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
+			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INTERRUPT,
 				"Finger[%d] status is gloved finger",
 				i);
 
 			break;
-		case RMI4_F12_OBJECT_ACTIVE_STYLUS:
-			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-			penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
-			pens++;
+		case (BYTE)RMI4_F12_OBJECT_ACTIVE_STYLUS:
+			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INTERRUPT,
 				"Finger[%d] status is active stylus",
 				i);
 
 			break;
-		case RMI4_F12_OBJECT_STYLUS:
-			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-			penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
-			pens++;
+		case (BYTE)RMI4_F12_OBJECT_STYLUS:
+			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INTERRUPT,
 				"Finger[%d] status is stylus",
 				i);
 
 			break;
-		case RMI4_F12_OBJECT_ERASER:
-			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-			penStatus[i] = RMI4_PEN_STATE_PRESENT_WITH_ERASER;
-			pens++;
+		case (BYTE)RMI4_F12_OBJECT_ERASER:
+			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_ERASER;
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INTERRUPT,
 				"Finger[%d] status is eraser",
 				i);
 
 			break;
-		case RMI4_F12_OBJECT_NONE:
-			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
+		case (BYTE)RMI4_F12_OBJECT_NONE:
+			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
-			/*Trace(
-				TRACE_LEVEL_INFORMATION,
+			STDebugPrint(
+				TRACE_LEVEL_VERBOSE,
 				TRACE_INTERRUPT,
 				"Finger[%d] status is none",
-				i);*/
+				i);
 
 			break;
 		default:
-			fingerStatus[i] = RMI4_FINGER_STATE_NOT_PRESENT;
-			penStatus[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INTERRUPT,
 				"Finger[%d] status is unknown: %d",
@@ -916,13 +1411,13 @@ Return Value:
 		x = (controllerData[i].X_MSB << 8) | controllerData[i].X_LSB;
 		y = (controllerData[i].Y_MSB << 8) | controllerData[i].Y_LSB;
 
-		Data->Finger[i].X = x;
-		Data->Finger[i].Y = y;
+		Data->Positions[i].X = x;
+		Data->Positions[i].Y = y;
 
-		if (controllerData[i].ObjectTypeAndStatus != RMI4_F12_OBJECT_NONE)
+		if (controllerData[i].ObjectTypeAndStatus != (BYTE)RMI4_F12_OBJECT_NONE)
 		{
-			Trace(
-				TRACE_LEVEL_INFORMATION,
+			STDebugPrint(
+				TRACE_LEVEL_VERBOSE,
 				TRACE_INTERRUPT,
 				"Finger[%d] X: %d, Y: %d, Z: %d, wX: %d, wY: %d",
 				i,
@@ -933,29 +1428,6 @@ Return Value:
 				controllerData[i].wY);
 		}
 	}
-
-	// Synchronize status back
-	Data->Status.FingerState0 = fingerStatus[0];
-	Data->Status.FingerState1 = fingerStatus[1];
-	Data->Status.FingerState2 = fingerStatus[2];
-	Data->Status.FingerState3 = fingerStatus[3];
-	Data->Status.FingerState4 = fingerStatus[4];
-	Data->Status.FingerState5 = fingerStatus[5];
-	Data->Status.FingerState6 = fingerStatus[6];
-	Data->Status.FingerState7 = fingerStatus[7];
-	Data->Status.FingerState8 = fingerStatus[8];
-	Data->Status.FingerState9 = fingerStatus[9];
-
-	Data->Status.PenState0 = penStatus[0];
-	Data->Status.PenState1 = penStatus[1];
-	Data->Status.PenState2 = penStatus[2];
-	Data->Status.PenState3 = penStatus[3];
-	Data->Status.PenState4 = penStatus[4];
-	Data->Status.PenState5 = penStatus[5];
-	Data->Status.PenState6 = penStatus[6];
-	Data->Status.PenState7 = penStatus[7];
-	Data->Status.PenState8 = penStatus[8];
-	Data->Status.PenState9 = penStatus[9];
 
 free_buffer:
 	ExFreePoolWithTag(
@@ -968,7 +1440,7 @@ exit:
 }
 
 NTSTATUS
-RmiGetQuery5(
+RmiGetSupportedControlRegistersF12(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
 	IN SPB_CONTEXT* SpbContext,
 	OUT PRMI4_F12_QUERY_5_REGISTER ControlRegisterData
@@ -991,7 +1463,7 @@ RmiGetQuery5(
 
 	if (index == ControllerContext->FunctionCount)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Set ReportingMode failure - RMI Function 12 missing");
@@ -1007,7 +1479,7 @@ RmiGetQuery5(
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not change register page");
@@ -1019,7 +1491,7 @@ RmiGetQuery5(
 
 	if (indexQuery4 == ControllerContext->QueryRegDesc.NumRegisters)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Cannot find F12_2D_Query4 offset");
@@ -1030,7 +1502,7 @@ RmiGetQuery5(
 
 	if (ControllerContext->QueryRegDesc.Registers[indexQuery4].RegisterSize != sizeof(ControlRegisterData->Size))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Unexpected F12_2D_Query4 register size: %d", ControllerContext->QueryRegDesc.Registers[indexQuery4].RegisterSize);
@@ -1051,7 +1523,7 @@ RmiGetQuery5(
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not read F12_2D_Query4 register - %!STATUS!",
@@ -1067,7 +1539,7 @@ RmiGetQuery5(
 
 	if (indexQuery5 == ControllerContext->QueryRegDesc.NumRegisters)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Cannot find F12_2D_Query5 offset");
@@ -1078,7 +1550,7 @@ RmiGetQuery5(
 
 	if (ControllerContext->QueryRegDesc.Registers[indexQuery5].RegisterSize < ControlRegisterData->Size)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Unexpected F12_2D_Query5 register size: %d", ControllerContext->QueryRegDesc.Registers[indexQuery5].RegisterSize);
@@ -1088,7 +1560,7 @@ RmiGetQuery5(
 	}
 	else if (ControllerContext->QueryRegDesc.Registers[indexQuery5].RegisterSize > ControlRegisterData->Size)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_WARNING,
 			TRACE_INIT,
 			"Higher F12_2D_Query5 register size: %d. Must expand driver!", ControllerContext->QueryRegDesc.Registers[indexQuery5].RegisterSize);
@@ -1106,7 +1578,7 @@ RmiGetQuery5(
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not read F12_2D_Query5 register - %!STATUS!",
@@ -1120,166 +1592,16 @@ exit:
 }
 
 NTSTATUS
-RmiSetReportingMode(
+RmiGetSupportedDataRegistersF12(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
 	IN SPB_CONTEXT* SpbContext,
-	IN UCHAR NewMode,
-	OUT UCHAR* OldMode
-)
-/*++
-
-	Routine Description:
-
-		Changes the F12 Reporting Mode on the controller as specified
-
-	Arguments:
-
-		ControllerContext - Touch controller context
-
-		SpbContext - A pointer to the current i2c context
-
-		NewMode - Either RMI_F12_REPORTING_MODE_CONTINUOUS
-				  or RMI_F12_REPORTING_MODE_REDUCED
-
-		OldMode - Old value of reporting mode
-
-	Return Value:
-
-		NTSTATUS indicating success or failure
-
---*/
-{
-	UCHAR reportingControl[3];
-	int index;
-	NTSTATUS status;
-	UINT8 indexCtrl20;
-
-	//
-	// Find RMI F12 function
-	//
-	index = RmiGetFunctionIndex(
-		ControllerContext->Descriptors,
-		ControllerContext->FunctionCount,
-		RMI4_F12_2D_TOUCHPAD_SENSOR);
-
-	if (index == ControllerContext->FunctionCount)
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Set ReportingMode failure - RMI Function 12 missing");
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
-	status = RmiChangePage(
-		ControllerContext,
-		SpbContext,
-		ControllerContext->FunctionOnPage[index]);
-
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Could not change register page");
-
-		goto exit;
-	}
-
-	indexCtrl20 = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, F12_2D_CTRL20);
-
-	if (indexCtrl20 == ControllerContext->ControlRegDesc.NumRegisters)
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Cannot find F12_2D_Ctrl20 offset");
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
-	if (ControllerContext->ControlRegDesc.Registers[indexCtrl20].RegisterSize != sizeof(reportingControl))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Unexpected F12_2D_Ctrl20 register size");
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
-	//
-	// Read Device Control register
-	//
-	status = SpbReadDataSynchronously(
-		SpbContext,
-		ControllerContext->Descriptors[index].ControlBase + indexCtrl20,
-		&reportingControl,
-		sizeof(reportingControl)
-	);
-
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Could not read F12_2D_Ctrl20 register - %!STATUS!",
-			status);
-
-		goto exit;
-	}
-
-	if (OldMode)
-	{
-		*OldMode = reportingControl[0] & RMI_F12_REPORTING_MODE_MASK;
-	}
-
-	//
-	// Assign new value
-	//
-	reportingControl[0] &= ~RMI_F12_REPORTING_MODE_MASK;
-	reportingControl[0] |= NewMode & RMI_F12_REPORTING_MODE_MASK;
-
-	//
-	// Write setting back to the controller
-	//
-	status = SpbWriteDataSynchronously(
-		SpbContext,
-		ControllerContext->Descriptors[index].ControlBase + indexCtrl20,
-		&reportingControl,
-		sizeof(reportingControl)
-	);
-
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Could not write F12_2D_Ctrl20 register - %X",
-			status);
-
-		goto exit;
-	}
-
-exit:
-
-	return status;
-}
-
-NTSTATUS
-RmiGetReporting(
-	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-	IN SPB_CONTEXT* SpbContext,
-	OUT PRMI4_F12_CONTROL_23_REGISTER ControlRegisterData
+	OUT PRMI4_F12_QUERY_8_REGISTER ControlRegisterData
 )
 {
 	int index;
 	NTSTATUS status;
-	UINT8 indexCtrl23;
+	UINT8 indexQuery7;
+	UINT8 indexQuery8;
 
 	NT_ASSERT(ControlRegisterData != NULL);
 
@@ -1293,7 +1615,7 @@ RmiGetReporting(
 
 	if (index == ControllerContext->FunctionCount)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Set ReportingMode failure - RMI Function 12 missing");
@@ -1309,7 +1631,7 @@ RmiGetReporting(
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not change register page");
@@ -1317,25 +1639,25 @@ RmiGetReporting(
 		goto exit;
 	}
 
-	indexCtrl23 = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, F12_2D_CTRL23);
+	indexQuery7 = RmiGetRegisterIndex(&ControllerContext->QueryRegDesc, 7);
 
-	if (indexCtrl23 == ControllerContext->ControlRegDesc.NumRegisters)
+	if (indexQuery7 == ControllerContext->QueryRegDesc.NumRegisters)
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Cannot find F12_2D_Ctrl23 offset");
+			"Cannot find F12_2D_Query7 offset");
 
 		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
 	}
 
-	if (ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize != sizeof(RMI4_F12_CONTROL_23_REGISTER))
+	if (ControllerContext->QueryRegDesc.Registers[indexQuery7].RegisterSize != sizeof(ControlRegisterData->Size))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Unexpected F12_2D_Ctrl23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
+			"Unexpected F12_2D_Query7 register size: %d", ControllerContext->QueryRegDesc.Registers[indexQuery7].RegisterSize);
 
 		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
@@ -1346,118 +1668,77 @@ RmiGetReporting(
 	//
 	status = SpbReadDataSynchronously(
 		SpbContext,
-		ControllerContext->Descriptors[index].ControlBase + indexCtrl23,
-		ControlRegisterData,
-		sizeof(RMI4_F12_CONTROL_23_REGISTER)
+		ControllerContext->Descriptors[index].QueryBase + indexQuery7,
+		&(ControlRegisterData->Size),
+		sizeof(ControlRegisterData->Size)
 	);
 
 	if (!NT_SUCCESS(status))
 	{
-		Trace(
+		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not read F12_2D_Ctrl23 register - %!STATUS!",
+			"Could not read F12_2D_Query7 register - %!STATUS!",
+			status);
+
+		goto exit;
+	}
+
+	if (ControlRegisterData->Size > sizeof(ControlRegisterData->Data))
+		ControlRegisterData->Size = sizeof(ControlRegisterData->Data);
+
+	indexQuery8 = RmiGetRegisterIndex(&ControllerContext->QueryRegDesc, 8);
+
+	if (indexQuery8 == ControllerContext->QueryRegDesc.NumRegisters)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Cannot find F12_2D_Query8 offset");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	if (ControllerContext->QueryRegDesc.Registers[indexQuery8].RegisterSize < ControlRegisterData->Size)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Unexpected F12_2D_Query8 register size: %d", ControllerContext->QueryRegDesc.Registers[indexQuery8].RegisterSize);
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+	else if (ControllerContext->QueryRegDesc.Registers[indexQuery8].RegisterSize > ControlRegisterData->Size)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_WARNING,
+			TRACE_INIT,
+			"Higher F12_2D_Query8 register size: %d. Must expand driver!", ControllerContext->QueryRegDesc.Registers[indexQuery8].RegisterSize);
+	}
+
+	//
+	// Read Device Control register
+	//
+	status = SpbReadDataSynchronously(
+		SpbContext,
+		ControllerContext->Descriptors[index].QueryBase + indexQuery8,
+		&(ControlRegisterData->Data),
+		ControlRegisterData->Size
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not read F12_2D_Query8 register - %!STATUS!",
 			status);
 
 		goto exit;
 	}
 
 exit:
-
-	return status;
-}
-
-NTSTATUS
-RmiSetReporting(
-	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-	IN SPB_CONTEXT* SpbContext,
-	IN PRMI4_F12_CONTROL_23_REGISTER ControlRegisterData
-)
-{
-	int index;
-	NTSTATUS status;
-	UINT8 indexCtrl23;
-
-	//
-	// Find RMI F12 function
-	//
-	index = RmiGetFunctionIndex(
-		ControllerContext->Descriptors,
-		ControllerContext->FunctionCount,
-		RMI4_F12_2D_TOUCHPAD_SENSOR);
-
-	if (index == ControllerContext->FunctionCount)
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Set ReportingMode failure - RMI Function 12 missing");
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
-	status = RmiChangePage(
-		ControllerContext,
-		SpbContext,
-		ControllerContext->FunctionOnPage[index]);
-
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Could not change register page");
-
-		goto exit;
-	}
-
-	indexCtrl23 = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, F12_2D_CTRL23);
-
-	if (indexCtrl23 == ControllerContext->ControlRegDesc.NumRegisters)
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Cannot find F12_2D_Ctrl23 offset");
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
-	if (ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize != sizeof(RMI4_F12_CONTROL_23_REGISTER))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Unexpected F12_2D_Ctrl23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
-	//
-	// Write setting back to the controller
-	//
-	status = SpbWriteDataSynchronously(
-		SpbContext,
-		ControllerContext->Descriptors[index].ControlBase + indexCtrl23,
-		ControlRegisterData,
-		sizeof(RMI4_F12_CONTROL_23_REGISTER)
-	);
-
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Could not write F12_2D_Ctrl23 register - %X",
-			status);
-
-		goto exit;
-	}
-
-exit:
-
 	return status;
 }

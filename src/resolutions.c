@@ -21,7 +21,7 @@
 --*/
 
 #include <compat.h>
-#include <rmiinternal.h>
+#include <rmi4\rmiinternal.h>
 #include <resolutions.tmh>
 
 //
@@ -362,7 +362,7 @@ TchTranslateToDisplayCoordinates(
     Y = Y * Props->DisplayViewableHeight / 
         (Props->DisplayAdjustedHeight - Props->DisplayAdjustedButtonHeight);
 
-    Trace(
+    STDebugPrint(
         TRACE_LEVEL_INFORMATION,
         TRACE_REPORTING,
         "In (%d,%d), Out (%d,%d)",
@@ -443,7 +443,7 @@ TchGetScreenProperties(
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_WARNING,
             TRACE_REGISTRY,
             "Error retrieving registry configuration - %!STATUS!",
@@ -458,7 +458,7 @@ TchGetScreenProperties(
         Props->TouchPillarBoxWidthRight >=
         Props->TouchPhysicalWidth)
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Invalid pillar box widths provided (%d,%d for %d)",
@@ -477,7 +477,7 @@ TchGetScreenProperties(
         Props->TouchLetterBoxHeightBottom >=
         Props->TouchPhysicalHeight)
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Invalid letter box heights provided (%d,%d for %d)",

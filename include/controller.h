@@ -9,6 +9,7 @@
 #define RESHUB_USE_HELPER_ROUTINES
 #include <reshub.h>
 #include "trace.h"
+#include "hid.h"
 #include "spb.h"
 
 //
@@ -23,66 +24,6 @@
 #define MODE_MULTI_TOUCH                0x02
 #define MAX_TOUCH_COORD                 0x0FFF
 #define FINGER_STATUS                   0x01 // finger down
-
-//
-// Types for PTP
-//
-#pragma pack(push)
-#pragma pack(1)
-typedef struct _PTP_CONTACT {
-    UCHAR		Confidence : 1;
-    UCHAR		TipSwitch : 1;
-    UCHAR		ContactID : 3;
-    UCHAR		Padding : 3;
-    USHORT		X;
-    USHORT		Y;
-} PTP_CONTACT, *PPTP_CONTACT;
-#pragma pack(pop)
-
-enum CONTACT_STATE {
-    CONTACT_NEW = 0,
-    CONTACT_CONTINUED = 1,
-    CONTACT_CONFIDENCE_CANCELLED = 2,
-    CONTACT_INVALID = 3
-};
-
-typedef struct _PTP_REPORT {
-    UCHAR       ReportID;
-    PTP_CONTACT Contacts[5];
-    USHORT      ScanTime;
-    UCHAR       ContactCount;
-    UCHAR       IsButtonClicked;
-} PTP_REPORT, *PPTP_REPORT;
-
-//
-// Types for Pen
-//
-#pragma pack(push)
-#pragma pack(1)
-typedef struct _PEN_CONTACT {
-    UCHAR		InRange   : 1;
-    UCHAR		TipSwitch : 1;
-    UCHAR		Eraser    : 3;
-    UCHAR		Padding   : 3;
-    USHORT		X;
-    USHORT		Y;
-} PEN_CONTACT, * PPEN_CONTACT;
-#pragma pack(pop)
-
-typedef struct _PEN_REPORT {
-    UCHAR       ReportID;
-    PEN_CONTACT Contacts[1];
-    USHORT      ScanTime;
-} PEN_REPORT, * PPEN_REPORT;
-
-//
-// General types
-//
-typedef union _DEV_REPORT
-{
-    PEN_REPORT PenReport;
-    PTP_REPORT PtpReport;
-} DEV_REPORT, * PDEV_REPORT;
 
 NTSTATUS 
 TchAllocateContext(

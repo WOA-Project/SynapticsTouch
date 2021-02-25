@@ -84,7 +84,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error creating WDF driver object - %!STATUS!",
@@ -168,7 +168,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "WdfDeviceCreate failed - %!STATUS!",
@@ -200,7 +200,7 @@ Return Value:
 
     if (!NT_SUCCESS (status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error creating WDF default queue - %!STATUS!",
@@ -226,7 +226,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error creating WDF read request queue - %!STATUS!",
@@ -254,7 +254,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error creating WDF idle request queue - %!STATUS!", 
@@ -280,7 +280,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
             "Error creating WDF interrupt object - %!STATUS!",

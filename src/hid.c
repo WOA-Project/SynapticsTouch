@@ -4,18 +4,23 @@
 #include <compat.h>
 #include <internal.h>
 #include <controller.h>
+#include <rmi4\rmiinternal.h>
 #include <hid.h>
 #include <hid.tmh>
-#include <rmiinternal.h>
 
 //
 // HID Report Descriptor for a touch device
 //
 
 const UCHAR gReportDescriptor[] = {
-	SYNAPTICS_TOUCHSCREEN_TLC,
-    SYNAPTICS_PEN_TLC,
-	SYNAPTICS_CONFIGURATION_TLC
+    SYNAPTICS_RMI4_DIGITIZER_DIAGNOSTIC1,
+    SYNAPTICS_RMI4_DIGITIZER_DIAGNOSTIC2,
+    SYNAPTICS_RMI4_DIGITIZER_DIAGNOSTIC3,
+    SYNAPTICS_RMI4_DIGITIZER_DIAGNOSTIC4,
+    SYNAPTICS_RMI4_DIGITIZER_FINGER,
+    SYNAPTICS_RMI4_DIGITIZER_REPORTMODE,
+    SYNAPTICS_RMI4_DIGITIZER_KEYPAD,
+    SYNAPTICS_RMI4_DIGITIZER_STYLUS
 };
 const ULONG gdwcbReportDescriptor = sizeof(gReportDescriptor);
 
@@ -73,7 +78,7 @@ Return Value:
     
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Failed to forward HID request to I/O queue - %!STATUS!",
@@ -186,7 +191,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error getting device string - %!STATUS!",
@@ -238,7 +243,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error getting HID descriptor request memory - %!STATUS!",
@@ -257,7 +262,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error copying HID descriptor to request memory - %!STATUS!",
@@ -320,7 +325,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error getting HID report descriptor request memory - %!STATUS!",
@@ -339,7 +344,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error copying HID report descriptor to request memory - %!STATUS!",
@@ -397,7 +402,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        Trace(
+        STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error retrieving device attribute output buffer - %!STATUS!",
@@ -481,7 +486,7 @@ Return Value:
     {
 		case REPORTID_REPORTMODE:
 		{
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_REPORTMODE is requested"
@@ -492,7 +497,7 @@ Return Value:
 			{
 			case PTP_COLLECTION_MOUSE:
 			{
-				Trace(
+				STDebugPrint(
 					TRACE_LEVEL_INFORMATION,
 					TRACE_DRIVER,
 					"%!FUNC! Report REPORTID_REPORTMODE requested Mouse Input"
@@ -504,7 +509,7 @@ Return Value:
 			case PTP_COLLECTION_WINDOWS:
 			{
 
-				Trace(
+				STDebugPrint(
 					TRACE_LEVEL_INFORMATION,
 					TRACE_DRIVER,
 					"%!FUNC! Report REPORTID_REPORTMODE requested Windows PTP Input"
@@ -515,44 +520,16 @@ Return Value:
 			}
 			}
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_REPORTMODE is fulfilled"
 			);
 			break;
 		}
-		case REPORTID_FUNCSWITCH:
-		{
-			Trace(
-				TRACE_LEVEL_INFORMATION,
-				TRACE_DRIVER,
-				"%!FUNC! Report REPORTID_FUNCSWITCH is requested"
-			);
-
-			PPTP_DEVICE_SELECTIVE_REPORT_MODE_REPORT InputSelection = (PPTP_DEVICE_SELECTIVE_REPORT_MODE_REPORT) featurePacket->reportBuffer;
-			devContext->PtpReportButton = InputSelection->ButtonReport;
-			devContext->PtpReportTouch = InputSelection->SurfaceReport;
-
-			Trace(
-				TRACE_LEVEL_INFORMATION,
-				TRACE_DRIVER,
-				"%!FUNC! Report REPORTID_FUNCSWITCH requested Button = %d, Surface = %d",
-				InputSelection->ButtonReport,
-				InputSelection->SurfaceReport
-			);
-
-			Trace(
-				TRACE_LEVEL_INFORMATION,
-				TRACE_DRIVER,
-				"%!FUNC! Report REPORTID_FUNCSWITCH is fulfilled"
-			);
-
-			break;
-		}
         default:
         {
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Unsupported type %d is requested",
@@ -631,7 +608,7 @@ Return Value:
     {
 		case REPORTID_DEVICE_CAPS:
 		{
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_DEVICE_CAPS is requested"
@@ -641,7 +618,7 @@ Return Value:
 			ReportSize = sizeof(PTP_DEVICE_CAPS_FEATURE_REPORT);
 			if (featurePacket->reportBufferLen < ReportSize) {
 				status = STATUS_INVALID_BUFFER_SIZE;
-				Trace(
+				STDebugPrint(
 					TRACE_LEVEL_ERROR,
 					TRACE_DRIVER,
 					"%!FUNC! Report buffer is too small"
@@ -652,7 +629,6 @@ Return Value:
 			PPTP_DEVICE_CAPS_FEATURE_REPORT capsReport = (PPTP_DEVICE_CAPS_FEATURE_REPORT) featurePacket->reportBuffer;
 
 			capsReport->MaximumContactPoints = PTP_MAX_CONTACT_POINTS;
-			capsReport->ButtonType = PTP_BUTTON_TYPE_CLICK_PAD;
 			capsReport->ReportID = REPORTID_DEVICE_CAPS;
 
             if (devContext->TouchContext != NULL)
@@ -660,19 +636,13 @@ Return Value:
                 capsReport->MaximumContactPoints = ((RMI4_CONTROLLER_CONTEXT*)devContext->TouchContext)->MaxFingers;
             }
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_DEVICE_CAPS has maximum contact points of %d",
 				capsReport->MaximumContactPoints
 			);
-			Trace(
-				TRACE_LEVEL_INFORMATION,
-				TRACE_DRIVER,
-				"%!FUNC! Report REPORTID_DEVICE_CAPS has touchpad type %d",
-				capsReport->ButtonType
-			);
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_DEVICE_CAPS is fulfilled"
@@ -682,7 +652,7 @@ Return Value:
 		}
 		case REPORTID_PTPHQA:
 		{
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_PTPHQA is requested"
@@ -693,7 +663,7 @@ Return Value:
 			if (featurePacket->reportBufferLen < ReportSize)
 			{
 				status = STATUS_INVALID_BUFFER_SIZE;
-				Trace(
+				STDebugPrint(
 					TRACE_LEVEL_ERROR,
 					TRACE_DRIVER,
 					"%!FUNC! Report buffer is too small."
@@ -706,7 +676,7 @@ Return Value:
 			*certReport->CertificationBlob = DEFAULT_PTP_HQA_BLOB;
 			certReport->ReportID = REPORTID_PTPHQA;
 
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_PTPHQA is fulfilled"
@@ -716,7 +686,7 @@ Return Value:
 		}
         case REPORTID_PENHQA:
         {
-            Trace(
+            STDebugPrint(
                 TRACE_LEVEL_INFORMATION,
                 TRACE_DRIVER,
                 "%!FUNC! Report REPORTID_PENHQA is requested"
@@ -727,7 +697,7 @@ Return Value:
             if (featurePacket->reportBufferLen < ReportSize)
             {
                 status = STATUS_INVALID_BUFFER_SIZE;
-                Trace(
+                STDebugPrint(
                     TRACE_LEVEL_ERROR,
                     TRACE_DRIVER,
                     "%!FUNC! Report buffer is too small."
@@ -740,7 +710,7 @@ Return Value:
             *certReport->CertificationBlob = DEFAULT_PTP_HQA_BLOB;
             certReport->ReportID = REPORTID_PENHQA;
 
-            Trace(
+            STDebugPrint(
                 TRACE_LEVEL_INFORMATION,
                 TRACE_DRIVER,
                 "%!FUNC! Report REPORTID_PENHQA is fulfilled"
@@ -750,7 +720,7 @@ Return Value:
         }
 		default:
 		{
-			Trace(
+			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Unsupported type %d is requested",

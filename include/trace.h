@@ -56,3 +56,11 @@
 // FUNC Trace(LEVEL, FLAGS, MSG, ...);
 // end_wpp
 //
+
+#ifdef TRACING_ENABLED
+#define STDebugPrint(Level, Flags, Msg, ...) \
+			Trace(Level, Flags, Msg, __VA_ARGS__);
+#else
+#define STDebugPrint(Level, Flags, Msg, ...) \
+			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "SynapticsTouch: " Msg "\n", __VA_ARGS__);
+#endif
