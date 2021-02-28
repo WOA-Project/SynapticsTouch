@@ -1,5 +1,6 @@
 /*++
     Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) LumiaWOA Authors. All Rights Reserved. 
     Sample code. Dealpoint ID #843729.
 
     Module Name:
@@ -8,7 +9,7 @@
 
     Abstract:
 
-        Contains function defintions used internally
+        Contains function definitions used internally
         by the F01 digitizer function.
 
     Environment:
@@ -32,11 +33,13 @@ typedef struct _RMI4_F01_CTRL_REGISTERS
         BYTE All;
         struct
         {
-            BYTE SleepMode : 2;
-            BYTE NoSleep : 1;
-            BYTE Reserved0 : 3;
-            BYTE ReportRate : 1;
-            BYTE Configured : 1;
+            BYTE SleepMode        : 2; // 0..1
+            BYTE NoSleep          : 1; // 2
+            BYTE Unknown0         : 1; // 3
+            BYTE Reserved0        : 1; // 4
+            BYTE ChargerConnected : 1; // 5
+            BYTE ReportRate       : 1; // 6
+            BYTE Configured       : 1; // 7
         };
     } DeviceControl;
     BYTE InterruptEnable;
@@ -78,6 +81,13 @@ typedef struct _RMI4_F01_COMMAND_REGISTERS
 {
     BYTE Reset;
 } RMI4_F01_COMMAND_REGISTERS;
+
+NTSTATUS
+RmiChangeChargerConnectedState(
+    IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+    IN SPB_CONTEXT* SpbContext,
+    IN UCHAR ChargerConnectedState
+);
 
 NTSTATUS
 RmiChangeSleepState(

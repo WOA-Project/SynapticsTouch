@@ -92,7 +92,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Error: Input buffer is too small to process idle request - %!STATUS!", 
+            "Error: Input buffer is too small to process idle request - 0x%08lX", 
             status);
 
         goto exit;
@@ -112,7 +112,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Error: Idle Notification request %p has no idle callback info - %!STATUS!",
+            "Error: Idle Notification request %p has no idle callback info - 0x%08lX",
             Request,
             status);
         goto exit;
@@ -142,7 +142,7 @@ Return Value:
             STDebugPrint(
                 TRACE_LEVEL_ERROR,
                 TRACE_HID,
-                "Error creating creating idle work item - %!STATUS!",
+                "Error creating creating idle work item - 0x%08lX",
                 status);
             goto exit;
         }
@@ -236,7 +236,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_IDLE,
-            "Error forwarding idle notification Request:0x%p to IdleQueue:0x%p - %!STATUS!",
+            "Error forwarding idle notification Request:0x%p to IdleQueue:0x%p - 0x%08lX",
             idleWorkItemContext->FxRequest,
             deviceContext->IdleQueue,
             status);
@@ -251,7 +251,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_INFORMATION,
             TRACE_IDLE,
-            "Forwarded idle notification Request:0x%p to IdleQueue:0x%p - %!STATUS!",
+            "Forwarded idle notification Request:0x%p to IdleQueue:0x%p - 0x%08lX",
             idleWorkItemContext->FxRequest,
             deviceContext->IdleQueue,
             status);
@@ -305,7 +305,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_WARNING,
             TRACE_IDLE,
-            "Error finding idle notification request in IdleQueue:0x%p - %!STATUS!",
+            "Error finding idle notification request in IdleQueue:0x%p - 0x%08lX",
             FxDeviceContext->IdleQueue,
             status);
     }
@@ -319,7 +319,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_INFORMATION,
             TRACE_IDLE,
-            "Completed idle notification Request:0x%p from IdleQueue:0x%p - %!STATUS!",
+            "Completed idle notification Request:0x%p from IdleQueue:0x%p - 0x%08lX",
             request,
             FxDeviceContext->IdleQueue,
             status);

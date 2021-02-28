@@ -350,6 +350,182 @@ TchReadReport(
 		END_COLLECTION, /* End Collection */ \
 	END_COLLECTION /* End Collection */
 
+//
+// [New] HID collections
+// 
+#define SYNAPTICS_RMI4_DIGITIZER_FINGER_CONTACT_1 \
+	BEGIN_COLLECTION, 0x02, /* Collection (Logical) */ \
+		USAGE, 0x42, /* Usage (Tip Switch) */ \
+		LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
+		LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
+		PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
+		PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
+		UNIT, 0x00, /* Unit (None) */ \
+		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
+		REPORT_SIZE, 0x01, /* Report Size (1) */ \
+		REPORT_COUNT, 0x01, /* Report Count (1) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x32, /* Usage (In Range) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x47, /* Usage (Confidence) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		REPORT_COUNT, 0x05, /* Report Count (5) */ \
+		INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		USAGE, 0x51, /* Usage (Contract Identifier) */ \
+		PHYSICAL_MAXIMUM, 0x00, /* Physical Maximum (0) */ \
+		REPORT_SIZE, 0x08, /* Report Size (8) */ \
+		REPORT_COUNT, 0x01, /* Report Count (1) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE_PAGE, 0x01, /* Usage Page (Generic Desktop Ctrls) */ \
+		USAGE, 0x30, /* Usage (X) */ \
+		LOGICAL_MAXIMUM_2, 0xA0, 0x05, /* Logical Maximum (1440) */ \
+		PHYSICAL_MAXIMUM_2, 0xCE, 0x02, /* Physical Maximum (7.18) */ \
+		UNIT, 0x11, /* Unit (System: SI Linear, Length: Centimeter) */ \
+		UNIT_EXPONENT, 0x0E, /* Unit Exponent (-2) */ \
+		REPORT_SIZE, 0x10, /* Report Size (16) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x31, /* Usage (Y) */ \
+		LOGICAL_MAXIMUM_2, 0x00, 0x0A, /* Logical Maximum (2560) */ \
+		PHYSICAL_MAXIMUM_2, 0xEB, 0x04, /* Physical Maximum (12.59) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		PHYSICAL_MAXIMUM, 0x00, /* Physical Maximum: 0 */ \
+		UNIT_EXPONENT, 0x00, /* Unit exponent: 0 */ \
+		UNIT, 0x00, /* Unit: None */ \
+	END_COLLECTION /* End Collection */
+
+#define SYNAPTICS_RMI4_DIGITIZER_FINGER_CONTACT_2 \
+	BEGIN_COLLECTION, 0x02, /* Collection (Logical) */ \
+		USAGE_PAGE, 0x0D, /* Usage Page (Digitizer) */ \
+		USAGE, 0x42, /* Usage (Tip Switch) */ \
+		LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
+		PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
+		UNIT, 0x00, /* Unit (None) */ \
+		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
+		REPORT_SIZE, 0x01, /* Report Size (1) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x32, /* Usage (In Range) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x47, /* Usage (Confidence) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		REPORT_COUNT, 0x05, /* Report Count (5) */ \
+		INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		USAGE, 0x51, /* Usage (Contract Identifier) */ \
+		PHYSICAL_MAXIMUM_2, 0xEB, 0x04, /* Physical Maximum (12.59) */ \
+		UNIT, 0x11, /* Unit (System: SI Linear, Length: Centimeter) */ \
+		UNIT_EXPONENT, 0x0E, /* Unit Exponent (-2) */ \
+		REPORT_SIZE, 0x08, /* Report Size (8) */ \
+		REPORT_COUNT, 0x01, /* Report Count (1) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE_PAGE, 0x01, /* Usage Page (Generic Desktop Ctrls) */ \
+		USAGE, 0x30, /* Usage (X) */ \
+		LOGICAL_MAXIMUM_2, 0xA0, 0x05, /* Logical Maximum (1440) */ \
+		PHYSICAL_MAXIMUM_2, 0xCE, 0x02, /* Physical Maximum (7.18) */ \
+		REPORT_SIZE, 0x10, /* Report Size (16) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x31, /* Usage (Y) */ \
+		LOGICAL_MAXIMUM_2, 0x00, 0x0A, /* Logical Maximum (2560) */ \
+		PHYSICAL_MAXIMUM_2, 0xEB, 0x04, /* Physical Maximum (12.59) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		PHYSICAL_MAXIMUM, 0x00, /* Physical Maximum: 0 */ \
+		UNIT_EXPONENT, 0x00, /* Unit exponent: 0 */ \
+		UNIT, 0x00, /* Unit: None */ \
+	END_COLLECTION /* End Collection */
+
+#define SYNAPTICS_RMI4_DIGITIZER_STYLUS_CONTACT_1 \
+	BEGIN_COLLECTION, 0x00, /* Collection (Physical) */ \
+		USAGE, 0x42, /* Usage (Tip Switch) */ \
+		LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
+		LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
+		PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
+		PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
+		UNIT, 0x00, /* Unit (None) */ \
+		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
+		REPORT_SIZE, 0x01, /* Report Size (1) */ \
+		REPORT_COUNT, 0x01, /* Report Count (1) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x44, /* Usage (Barrel Switch) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x3C, /* Usage (Invert) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x45, /* Usage (Eraser) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		USAGE, 0x32, /* Usage (In Range) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		REPORT_COUNT, 0x02, /* Report Count (2) */ \
+		INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		USAGE_PAGE, 0x01, /* Usage Page (Generic Desktop Ctrls) */ \
+		USAGE, 0x30, /* Usage (X) */ \
+		LOGICAL_MAXIMUM_2, 0xA0, 0x05, /* Logical Maximum (1440) */ \
+		PHYSICAL_MAXIMUM_2, 0xCE, 0x02, /* Physical Maximum (7.18) */ \
+		UNIT, 0x11, /* Unit (System: SI Linear, Length: Centimeter) */ \
+		UNIT_EXPONENT, 0x0E, /* Unit Exponent (-2) */ \
+		REPORT_SIZE, 0x10, /* Report Size (16) */ \
+		REPORT_COUNT, 0x01, /* Report Count (1) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x31, /* Usage (Y) */ \
+		LOGICAL_MAXIMUM_2, 0x00, 0x0A, /* Logical Maximum (2560) */ \
+		PHYSICAL_MAXIMUM_2, 0xEB, 0x04, /* Physical Maximum (12.59) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE_PAGE, 0x0D, /* Usage Page (Digitizer) */ \
+		USAGE, 0x30, /* Usage (Tip Pressure) */ \
+		LOGICAL_MAXIMUM, 0xFF, /* Logical Maximum (-1) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x3D, /* Usage (X Tilt) */ \
+		LOGICAL_MAXIMUM, 0x7F, /* Logical Maximum (127) */ \
+		REPORT_SIZE, 0x08, /* Report Size (8) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x3E, /* Usage (Y Tilt) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		PHYSICAL_MAXIMUM, 0x00, /* Physical Maximum: 0 */ \
+		UNIT_EXPONENT, 0x00, /* Unit exponent: 0 */ \
+		UNIT, 0x00, /* Unit: None */ \
+	END_COLLECTION /* End Collection */
+
+#define SYNAPTICS_RMI4_DIGITIZER_PUCK_CONTACT_1 \
+	BEGIN_COLLECTION, 0x00, /* COLLECTION (Physical) */ \
+		USAGE_PAGE, 0x09, /* USAGE_PAGE (Buttons) */ \
+		USAGE, 0x01, /* USAGE (Button 1) */ \
+		REPORT_COUNT, 0x01, /* REPORT_COUNT (1) */ \
+		REPORT_SIZE, 0x01, /* REPORT_SIZE (1) */ \
+		LOGICAL_MINIMUM, 0x00, /* LOGICAL_MINIMUM (0) */ \
+		LOGICAL_MAXIMUM, 0x01, /* LOGICAL_MAXIMUM (1) */ \
+		INPUT, 0x02, /* INPUT (Data,Var,Abs) */ \
+		USAGE_PAGE, 0x01, /* USAGE_PAGE (Generic Desktop) */ \
+		USAGE, 0x37, /* USAGE (Dial) */ \
+		REPORT_COUNT, 0x01, /* REPORT_COUNT (1) */ \
+		REPORT_SIZE, 0x0f, /* REPORT_SIZE (15) */ \
+		UNIT_EXPONENT, 0x0f, /* UNIT_EXPONENT (-1) */ \
+		UNIT, 0x14, /* UNIT (Degrees, English Rotation) */ \
+		PHYSICAL_MINIMUM_2, 0xf0, 0xf1, /* PHYSICAL_MINIMUM (-3600) */ \
+		PHYSICAL_MAXIMUM_2, 0x10, 0x0e, /* PHYSICAL_MAXIMUM (3600) */ \
+		LOGICAL_MINIMUM_2, 0xf0, 0xf1, /* LOGICAL_MINIMUM (-3600) */ \
+		LOGICAL_MAXIMUM_2, 0x10, 0x0e, /* LOGICAL_MAXIMUM (3600) */ \
+		INPUT, 0x06, /* INPUT (Data,Var,Rel) */ \
+		USAGE, 0x30, /* USAGE (X) */ \
+		REPORT_SIZE, 0x10, /* REPORT_SIZE (16) */ \
+		UNIT_EXPONENT, 0x0d, /* UNIT_EXPONENT (-3) */ \
+		UNIT, 0x13, /* UNIT (Inch,EngLinear) */ \
+		PHYSICAL_MINIMUM, 0x00, /* PHYSICAL_MINIMUM (0) */ \
+		PHYSICAL_MAXIMUM_2, 0xc0, 0x5d, /* PHYSICAL_MAXIMUM (24000) */ \
+		LOGICAL_MINIMUM, 0x00, /* LOGICAL_MINIMUM (0) */ \
+		LOGICAL_MAXIMUM_2, 0xff, 0x7f, /* LOGICAL_MAXIMUM (32767) */ \
+		INPUT, 0x02, /* INPUT (Data,Var,Abs) */ \
+		USAGE, 0x31, /* USAGE (Y) */ \
+		PHYSICAL_MAXIMUM_2, 0xb0, 0x36, /* PHYSICAL_MAXIMUM (14000) */ \
+		INPUT, 0x02, /* INPUT (Data,Var,Abs) */ \
+		USAGE_PAGE, 0x0d, /* USAGE_PAGE (Digitizers) */ \
+		USAGE, 0x48, /* USAGE (Width) */ \
+		PHYSICAL_MINIMUM_2, 0xb8, 0x0b, /* PHYSICAL_MINIMUM (3000) */ \
+		PHYSICAL_MAXIMUM_2, 0xb8, 0x0b, /* PHYSICAL_MAXIMUM (3000) */ \
+		LOGICAL_MINIMUM_2, 0xb8, 0x0b, /* LOGICAL_MINIMUM (3000) */ \
+		LOGICAL_MAXIMUM_2, 0xb8, 0x0b, /* LOGICAL_MAXIMUM (3000) */ \
+		INPUT, 0x03, /* INPUT (Cnst,Var,Abs) */ \
+		PHYSICAL_MAXIMUM, 0x00, /* Physical Maximum: 0 */ \
+		UNIT_EXPONENT, 0x00, /* Unit exponent: 0 */ \
+		UNIT, 0x00, /* Unit: None */ \
+	END_COLLECTION /* END_COLLECTION */ 
+
 #define SYNAPTICS_RMI4_DIGITIZER_DIAGNOSTIC1 \
 	USAGE_PAGE_1, 0x05, 0xFF, /* Usage Page (Vendor Defined 0xFF05) */ \
 	USAGE, 0x01, /* Usage (0x01) */ \
@@ -363,11 +539,11 @@ TchReadReport(
 		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
 		REPORT_SIZE, 0x08, /* Report Size (8) */ \
 		REPORT_COUNT, 0xC7, /* Report Count (-57) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 		REPORT_ID, 0xF1, /* Report ID (-15) */ \
 		USAGE, 0x31, /* Usage (0x31) */ \
 		REPORT_COUNT, 0x3E, /* Report Count (62) */ \
-		FEATURE, 0x02, /* Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile) */ \
+		FEATURE, 0x02, /* Feature: (Data, Var, Abs) */ \
 	END_COLLECTION /* End Collection */
 
 #define SYNAPTICS_RMI4_DIGITIZER_DIAGNOSTIC2 \
@@ -383,7 +559,7 @@ TchReadReport(
 		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
 		REPORT_SIZE, 0x08, /* Report Size (8) */ \
 		REPORT_COUNT, 0x10, /* Report Count (16) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 	END_COLLECTION /* End Collection */
 
 #define SYNAPTICS_RMI4_DIGITIZER_DIAGNOSTIC3 \
@@ -399,7 +575,7 @@ TchReadReport(
 		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
 		REPORT_SIZE, 0x08, /* Report Size (8) */ \
 		REPORT_COUNT, 0x06, /* Report Count (6) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 	END_COLLECTION /* End Collection */
 
 #define SYNAPTICS_RMI4_DIGITIZER_DIAGNOSTIC4 \
@@ -415,11 +591,11 @@ TchReadReport(
 		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
 		REPORT_SIZE, 0x08, /* Report Size (8) */ \
 		REPORT_COUNT_2, 0xD4, 0x07, /* Report Count (2004) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 		REPORT_ID, 0xF6, /* Report ID (-10) */ \
 		USAGE, 0x32, /* Usage (0x32) */ \
 		REPORT_COUNT, 0x03, /* Report Count (3) */ \
-		FEATURE, 0x02, /* Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile) */ \
+		FEATURE, 0x02, /* Feature: (Data, Var, Abs) */ \
 	END_COLLECTION /* End Collection */
 
 #define SYNAPTICS_RMI4_DIGITIZER_FINGER \
@@ -428,83 +604,25 @@ TchReadReport(
 	BEGIN_COLLECTION, 0x01, /* Collection (Application) */ \
 		REPORT_ID, REPORTID_FINGER, /* Report ID (1) */ \
 		USAGE, 0x22, /* Usage (Finger) */ \
-		BEGIN_COLLECTION, 0x02, /* Collection (Logical) */ \
-			USAGE, 0x42, /* Usage (Tip Switch) */ \
-			LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
-			LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
-			PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
-			PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
-			UNIT, 0x00, /* Unit (None) */ \
-			UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
-			REPORT_SIZE, 0x01, /* Report Size (1) */ \
-			REPORT_COUNT, 0x01, /* Report Count (1) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x32, /* Usage (In Range) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x47, /* Usage (Confidence) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			REPORT_COUNT, 0x05, /* Report Count (5) */ \
-			INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x51, /* Usage (Contract Identifier) */ \
-			PHYSICAL_MAXIMUM, 0x00, /* Physical Maximum (0) */ \
-			REPORT_SIZE, 0x08, /* Report Size (8) */ \
-			REPORT_COUNT, 0x01, /* Report Count (1) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE_PAGE, 0x01, /* Usage Page (Generic Desktop Ctrls) */ \
-			USAGE, 0x30, /* Usage (X) */ \
-			LOGICAL_MAXIMUM_2, 0xE0, 0x01, /* Logical Maximum (480) */ \
-			PHYSICAL_MAXIMUM_2, 0x50, 0x19, /* Physical Maximum (6480) */ \
-			UNIT, 0x11, /* Unit (System: SI Linear, Length: Centimeter) */ \
-			UNIT_EXPONENT, 0x0D, /* Unit Exponent (-3) */ \
-			REPORT_SIZE, 0x10, /* Report Size (16) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x31, /* Usage (Y) */ \
-			LOGICAL_MAXIMUM_2, 0x20, 0x03, /* Logical Maximum (800) */ \
-			PHYSICAL_MAXIMUM_2, 0x00, 0x2D, /* Physical Maximum (11520) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-		END_COLLECTION, /* End Collection */ \
+		SYNAPTICS_RMI4_DIGITIZER_FINGER_CONTACT_1, /* Finger Contact (1) */ \
 		USAGE, 0x00, /* Usage (Undefined) */ \
-		BEGIN_COLLECTION, 0x02, /* Collection (Logical) */ \
-			USAGE_PAGE, 0x0D, /* Usage Page (Digitizer) */ \
-			USAGE, 0x42, /* Usage (Tip Switch) */ \
-			LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
-			PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
-			UNIT, 0x00, /* Unit (None) */ \
-			UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
-			REPORT_SIZE, 0x01, /* Report Size (1) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x32, /* Usage (In Range) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x47, /* Usage (Confidence) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			REPORT_COUNT, 0x05, /* Report Count (5) */ \
-			INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x51, /* Usage (Contract Identifier) */ \
-			PHYSICAL_MAXIMUM_2, 0x00, 0x2D, /* Physical Maximum (11520) */ \
-			UNIT, 0x11, /* Unit (System: SI Linear, Length: Centimeter) */ \
-			UNIT_EXPONENT, 0x0D, /* Unit Exponent (-3) */ \
-			REPORT_SIZE, 0x08, /* Report Size (8) */ \
-			REPORT_COUNT, 0x01, /* Report Count (1) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE_PAGE, 0x01, /* Usage Page (Generic Desktop Ctrls) */ \
-			USAGE, 0x30, /* Usage (X) */ \
-			LOGICAL_MAXIMUM_2, 0xE0, 0x01, /* Logical Maximum (480) */ \
-			PHYSICAL_MAXIMUM_2, 0x50, 0x19, /* Physical Maximum (6480) */ \
-			REPORT_SIZE, 0x10, /* Report Size (16) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x31, /* Usage (Y) */ \
-			LOGICAL_MAXIMUM_2, 0x20, 0x03, /* Logical Maximum (800) */ \
-			PHYSICAL_MAXIMUM_2, 0x00, 0x2D, /* Physical Maximum (11520) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-		END_COLLECTION, /* End Collection */ \
+		SYNAPTICS_RMI4_DIGITIZER_FINGER_CONTACT_2, /* Finger Contact (2) */ \
 		USAGE_PAGE, 0x0D, /* Usage Page (Digitizer) */ \
 		USAGE, 0x54, /* Usage (Contact Count) */ \
 		REPORT_SIZE, 0x08, /* Report Size (8) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 		REPORT_ID, REPORTID_DEVICE_CAPS, /* Report ID (8) */ \
 		USAGE, 0x55, /* Usage (Maximum Contacts) */ \
 		LOGICAL_MAXIMUM, 0x02, /* Logical Maximum (2) */ \
-		FEATURE, 0x02, /* Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile) */ \
+		FEATURE, 0x02, /* Feature: (Data, Var, Abs) */ \
+		USAGE_PAGE_1, 0x00, 0xff, \
+		REPORT_ID, REPORTID_PTPHQA, \
+		USAGE, 0xc5, \
+		LOGICAL_MINIMUM, 0x00, \
+		LOGICAL_MAXIMUM_2, 0xff, 0x00, \
+		REPORT_SIZE, 0x08, \
+		REPORT_COUNT_2, 0x00, 0x01, \
+		FEATURE, 0x02, \
 	END_COLLECTION /* End Collection */
 
 #define SYNAPTICS_RMI4_DIGITIZER_REPORTMODE \
@@ -518,14 +636,14 @@ TchReadReport(
 			LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
 			LOGICAL_MAXIMUM, 0x0A, /* Logical Maximum (10) */ \
 			PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
-			PHYSICAL_MAXIMUM_2, 0x00, 0x2D, /* Physical Maximum (11520) */ \
+			PHYSICAL_MAXIMUM_2, 0xEB, 0x04, /* Physical Maximum (12.59) */ \
 			UNIT, 0x11, /* Unit (System: SI Linear, Length: Centimeter) */ \
-			UNIT_EXPONENT, 0x0D, /* Unit Exponent (-3) */ \
+			UNIT_EXPONENT, 0x0E, /* Unit Exponent (-2) */ \
 			REPORT_SIZE, 0x08, /* Report Size (8) */ \
 			REPORT_COUNT, 0x01, /* Report Count (1) */ \
-			FEATURE, 0x02, /* Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile) */ \
+			FEATURE, 0x02, /* Feature: (Data, Var, Abs) */ \
 			USAGE, 0x53, /* Usage (Device Identifier) */ \
-			FEATURE, 0x02, /* Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile) */ \
+			FEATURE, 0x02, /* Feature: (Data, Var, Abs) */ \
 		END_COLLECTION, /* End Collection */ \
 	END_COLLECTION /* End Collection */
 
@@ -544,13 +662,13 @@ TchReadReport(
 		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
 		REPORT_SIZE, 0x01, /* Report Size (1) */ \
 		REPORT_COUNT, 0x01, /* Report Count (1) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 		USAGE, 0x3C, /* Usage (Keyboard F3) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 		USAGE, 0x29, /* Usage (Keyboard ESCAPE) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 		USAGE, 0x68, /* Usage (Keyboard F13) */ \
-		INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 		REPORT_COUNT, 0x1C, /* Report Count (28) */ \
 		INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
 	END_COLLECTION /* End Collection */
@@ -561,53 +679,26 @@ TchReadReport(
 	BEGIN_COLLECTION, 0x01, /* Collection (Application) */ \
 		REPORT_ID, REPORTID_STYLUS, /* Report ID (11) */ \
 		USAGE, 0x20, /* Usage (Stylus) */ \
-		BEGIN_COLLECTION, 0x00, /* Collection (Physical) */ \
-			USAGE, 0x42, /* Usage (Tip Switch) */ \
-			LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
-			LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
-			PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
-			PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
-			UNIT, 0x00, /* Unit (None) */ \
-			UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
-			REPORT_SIZE, 0x01, /* Report Size (1) */ \
-			REPORT_COUNT, 0x01, /* Report Count (1) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x44, /* Usage (Barrel Switch) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x3C, /* Usage (Invert) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x45, /* Usage (Eraser) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x32, /* Usage (In Range) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			REPORT_COUNT, 0x02, /* Report Count (2) */ \
-			INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE_PAGE, 0x01, /* Usage Page (Generic Desktop Ctrls) */ \
-			USAGE, 0x30, /* Usage (X) */ \
-			LOGICAL_MAXIMUM_2, 0xE0, 0x01, /* Logical Maximum (480) */ \
-			PHYSICAL_MAXIMUM_2, 0x50, 0x19, /* Physical Maximum (6480) */ \
-			UNIT, 0x11, /* Unit (System: SI Linear, Length: Centimeter) */ \
-			UNIT_EXPONENT, 0x0D, /* Unit Exponent (-3) */ \
-			REPORT_SIZE, 0x10, /* Report Size (16) */ \
-			REPORT_COUNT, 0x01, /* Report Count (1) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x31, /* Usage (Y) */ \
-			LOGICAL_MAXIMUM_2, 0x20, 0x03, /* Logical Maximum (800) */ \
-			PHYSICAL_MAXIMUM_2, 0x00, 0x2D, /* Physical Maximum (11520) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE_PAGE, 0x0D, /* Usage Page (Digitizer) */ \
-			USAGE, 0x30, /* Usage (Tip Pressure) */ \
-			LOGICAL_MAXIMUM, 0xFF, /* Logical Maximum (-1) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x3D, /* Usage (X Tilt) */ \
-			LOGICAL_MAXIMUM, 0x7F, /* Logical Maximum (127) */ \
-			REPORT_SIZE, 0x08, /* Report Size (8) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-			USAGE, 0x3E, /* Usage (Y Tilt) */ \
-			INPUT, 0x02, /* Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
-		END_COLLECTION, /* End Collection */ \
+		SYNAPTICS_RMI4_DIGITIZER_STYLUS_CONTACT_1, /* Stylus (1) */ \
+		USAGE_PAGE_1, 0x00, 0xff, \
+		REPORT_ID, REPORTID_PENHQA, \
+		USAGE, 0xc5, \
+		LOGICAL_MINIMUM, 0x00, \
+		LOGICAL_MAXIMUM_2, 0xff, 0x00, \
+		REPORT_SIZE, 0x08, \
+		REPORT_COUNT_2, 0x00, 0x01, \
+		FEATURE, 0x02, \
 	END_COLLECTION /* End Collection */
+
+#define SYNAPTICS_RMI4_DIGITIZER_RADIAL_CONTROLLER \
+	USAGE_PAGE, 0x01, /* USAGE_PAGE (Generic Desktop) */ \
+	USAGE, 0x0e, /* USAGE (System Multi-Axis Controller) */ \
+	BEGIN_COLLECTION, 0x01, /* COLLECTION (Application) */ \
+		REPORT_ID, REPORTID_RADIALCONTROLLER, /* REPORT_ID (Radial Controller) */ \
+		USAGE_PAGE, 0x0d, /* USAGE_PAGE (Digitizers) */ \
+		USAGE, 0x21, /* USAGE (Puck) */ \
+		SYNAPTICS_RMI4_DIGITIZER_PUCK_CONTACT_1, /* Puck (1) */ \
+	END_COLLECTION /* END_COLLECTION */
 
 #define DEFAULT_PTP_HQA_BLOB \
 	0xfc, 0x28, 0xfe, 0x84, 0x40, 0xcb, 0x9a, 0x87, \
@@ -678,6 +769,7 @@ typedef struct _PTP_DEVICE_FINGER {
 typedef struct _PTP_DEVICE_FINGER_REPORT {
 	UCHAR             ReportID;
 	PTP_DEVICE_FINGER Contacts[2];
+	//USHORT            ScanTime;
 	UCHAR             ContactCount;
 } PTP_DEVICE_FINGER_REPORT, * PPTP_DEVICE_FINGER_REPORT;
 
@@ -695,8 +787,9 @@ typedef struct _PTP_DEVICE_KEYPAD_REPORT {
 } PTP_DEVICE_KEYPAD_REPORT, * PPTP_DEVICE_KEYPAD_REPORT;
 
 // REPORTID_STYLUS
-typedef struct _PTP_DEVICE_STYLUS_REPORT {
-	UCHAR  ReportID;
+#pragma pack(push)
+#pragma pack(1)
+typedef struct _PTP_DEVICE_STYLUS {
 	UCHAR  TipSwitch    : 1;
 	UCHAR  BarrelSwitch : 1;
 	UCHAR  Invert       : 1;
@@ -708,6 +801,12 @@ typedef struct _PTP_DEVICE_STYLUS_REPORT {
 	UCHAR  TipPressure;
 	UCHAR  XTilt;
 	UCHAR  YTilt;
+} PTP_DEVICE_STYLUS, * PPTP_DEVICE_STYLUS;
+#pragma pack(pop)
+typedef struct _PTP_DEVICE_STYLUS_REPORT {
+	UCHAR             ReportID;
+	PTP_DEVICE_STYLUS Contacts[1];
+	//USHORT            ScanTime;
 } PTP_DEVICE_STYLUS_REPORT, * PPTP_DEVICE_STYLUS_REPORT;
 
 // General Type

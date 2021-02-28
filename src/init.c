@@ -69,7 +69,7 @@ TchStartDevice(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not build table of RMI functions - %!STATUS!",
+			"Could not build table of RMI functions - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -86,7 +86,7 @@ TchStartDevice(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not configure RMI functions - %!STATUS!",
+			"Could not configure RMI functions - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -103,7 +103,7 @@ TchStartDevice(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not get RMI firmware version - %!STATUS!",
+			"Could not get RMI firmware version - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -122,7 +122,7 @@ TchStartDevice(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not get interrupt status - %!STATUS!%",
+			"Could not get interrupt status - 0x%08lX%",
 			status);
 	}
 
@@ -223,7 +223,7 @@ Return Value:
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not create lock - %!STATUS!",
+			"Could not create lock - 0x%08lX",
 			status);
 
 		TchFreeContext(context);

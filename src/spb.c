@@ -23,6 +23,8 @@
 #include <controller.h>
 #include <spb.tmh>
 
+#define I2C_VERBOSE_LOGGING 0
+
 NTSTATUS
 SpbDoWriteDataSynchronously(
     IN SPB_CONTEXT *SpbContext,
@@ -78,7 +80,7 @@ SpbDoWriteDataSynchronously(
             STDebugPrint(
                 TRACE_LEVEL_ERROR,
                 TRACE_SPB,
-                "Error allocating memory for Spb write - %!STATUS!",
+                "Error allocating memory for Spb write - 0x%08lX",
                 status);
             goto exit;
         }
@@ -108,6 +110,16 @@ SpbDoWriteDataSynchronously(
     //
     RtlCopyMemory((buffer+sizeof(Address)), Data, length-sizeof(Address));
 
+#if I2C_VERBOSE_LOGGING
+    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "I2CWRITE: LENGTH=%d", length);
+    for (ULONG j = 0; j < length; j++)
+    {
+        UCHAR byte = *(buffer + j);
+        DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, " %02hhX", byte);
+    }
+    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "\n");
+#endif
+
     status = WdfIoTargetSendWriteSynchronously(
         SpbContext->SpbIoTarget,
         NULL,
@@ -121,7 +133,7 @@ SpbDoWriteDataSynchronously(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error writing to Spb - %!STATUS!",
+            "Error writing to Spb - 0x%08lX",
             status);
         goto exit;
     }
@@ -232,7 +244,7 @@ SpbReadDataSynchronously(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error setting address pointer for Spb read - %!STATUS!",
+            "Error setting address pointer for Spb read - 0x%08lX",
             status);
         goto exit;
     }
@@ -252,7 +264,7 @@ SpbReadDataSynchronously(
             STDebugPrint(
                 TRACE_LEVEL_ERROR,
                 TRACE_SPB,
-                "Error allocating memory for Spb read - %!STATUS!",
+                "Error allocating memory for Spb read - 0x%08lX",
                 status);
             goto exit;
         }
@@ -272,7 +284,6 @@ SpbReadDataSynchronously(
             Length);
     }
 
-
     status = WdfIoTargetSendReadSynchronously(
         SpbContext->SpbIoTarget,
         NULL,
@@ -287,10 +298,20 @@ SpbReadDataSynchronously(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error reading from Spb - %!STATUS!",
+            "Error reading from Spb - 0x%08lX",
             status);
         goto exit;
     }
+
+#if I2C_VERBOSE_LOGGING
+    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "I2CREAD: LENGTH=%d", Length);
+    for (ULONG j = 0; j < Length; j++)
+    {
+        UCHAR byte = *(buffer + j);
+        DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, " %02hhX", byte);
+    }
+    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "\n");
+#endif
 
     //
     // Copy back to the caller's buffer
@@ -397,7 +418,7 @@ SpbTargetInitialize(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error creating IoTarget object - %!STATUS!", 
+            "Error creating IoTarget object - 0x%08lX", 
             status);
 
         WdfObjectDelete(SpbContext->SpbIoTarget);
@@ -419,7 +440,7 @@ SpbTargetInitialize(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error creating Spb resource hub path string - %!STATUS!",
+            "Error creating Spb resource hub path string - 0x%08lX",
             status);
         goto exit;
     }
@@ -440,7 +461,7 @@ SpbTargetInitialize(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error opening Spb target for communication - %!STATUS!", 
+            "Error opening Spb target for communication - 0x%08lX", 
             status);
         goto exit;
     }
@@ -462,7 +483,7 @@ SpbTargetInitialize(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error allocating default memory for Spb write - %!STATUS!",
+            "Error allocating default memory for Spb write - 0x%08lX",
             status);
         goto exit;
     }
@@ -480,7 +501,7 @@ SpbTargetInitialize(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error allocating default memory for Spb read - %!STATUS!",
+            "Error allocating default memory for Spb read - 0x%08lX",
             status);
         goto exit;
     }
@@ -497,7 +518,7 @@ SpbTargetInitialize(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
-            "Error creating Spb Waitlock - %!STATUS!",
+            "Error creating Spb Waitlock - 0x%08lX",
             status);
         goto exit;
     }

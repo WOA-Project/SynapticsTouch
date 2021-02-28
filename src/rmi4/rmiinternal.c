@@ -61,6 +61,12 @@ RmiChangePage(
 	}
 	else
 	{
+		STDebugPrint(
+			TRACE_LEVEL_INFORMATION,
+			TRACE_INIT,
+			"Changing page to %d",
+			DesiredPage);
+
 		page = (BYTE)DesiredPage;
 
 		status = SpbWriteDataSynchronously(
@@ -136,7 +142,7 @@ RmiReadRegisterDescriptor(
 {
 	NTSTATUS Status;
 
-	BYTE size_presence_reg;
+	BYTE size_presence_reg = 0;
 	BYTE buf[35];
 	int presense_offset = 1;
 	BYTE* struct_buf;
@@ -288,7 +294,7 @@ RmiReadRegisterDescriptor(
 		STDebugPrint(
 			TRACE_LEVEL_INFORMATION,
 			TRACE_INIT,
-			"%s: reg: %d reg size: %ld subpackets: %d\n",
+			"%s: reg: %d reg size: %ld subpackets: %d",
 			__func__,
 			item->Register, item->RegisterSize, item->NumSubPackets
 		);
@@ -309,7 +315,7 @@ i2c_read_fail:
 	STDebugPrint(
 		TRACE_LEVEL_ERROR,
 		TRACE_INIT,
-		"Failed to read general info register - %!STATUS!",
+		"Failed to read general info register - 0x%08lX",
 		Status);
 	goto exit;
 }
@@ -403,7 +409,7 @@ RmiConfigureFunctions(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not configure function $12 - %!STATUS!",
+			"Could not configure function $12 - 0x%08lX",
 			status);
 
 		goto exit;
@@ -439,7 +445,7 @@ RmiConfigureFunctions(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not configure function $01 - %!STATUS!",
+			"Could not configure function $01 - 0x%08lX",
 			status);
 
 		goto exit;
@@ -507,7 +513,7 @@ RmiBuildFunctionsTable(
 			STDebugPrint(
 				TRACE_LEVEL_ERROR,
 				TRACE_INIT,
-				"Error returned from SPB/I2C read attempt %d - %!STATUS!",
+				"Error returned from SPB/I2C read attempt %d - 0x%08lX",
 				function,
 				status);
 			goto exit;
@@ -524,7 +530,7 @@ RmiBuildFunctionsTable(
 			break;
 		}
 		//
-		// If we've exhausted functions on this page, look for more functoins
+		// If we've exhausted functions on this page, look for more functions
 		// on the next register page
 		//
 		else if (ControllerContext->Descriptors[function].Number == 0 &&
@@ -543,7 +549,7 @@ RmiBuildFunctionsTable(
 				STDebugPrint(
 					TRACE_LEVEL_ERROR,
 					TRACE_INIT,
-					"Error attempting to change page - %!STATUS!",
+					"Error attempting to change page - 0x%08lX",
 					status);
 				goto exit;
 			}
@@ -556,8 +562,9 @@ RmiBuildFunctionsTable(
 			STDebugPrint(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INIT,
-				"Discovered function $%x",
-				ControllerContext->Descriptors[function].Number);
+				"Discovered function $%x on page %d",
+				ControllerContext->Descriptors[function].Number,
+				page);
 
 			ControllerContext->FunctionOnPage[function] = page;
 			function++;
@@ -573,7 +580,7 @@ RmiBuildFunctionsTable(
 	// or maxed-out the total number of functions supported by the 
 	// driver, note the error and exit.
 	//
-	if (function >= RMI4_MAX_FUNCTIONS)
+	if (function > RMI4_MAX_FUNCTIONS)
 	{
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,

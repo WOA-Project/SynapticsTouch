@@ -24,6 +24,121 @@
 #include <rmi4\rmiinternal.h>
 #include <rmi4\f01\function01.h>
 #include <power.tmh>
+#include <internal.h>
+
+NTSTATUS
+TchPowerSettingCallback(
+    _In_ LPCGUID SettingGuid,
+    _In_ PVOID Value,
+    _In_ ULONG ValueLength,
+    _Inout_opt_ PVOID Context
+)
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    PDEVICE_EXTENSION devContext = NULL;
+    RMI4_CONTROLLER_CONTEXT* ControllerContext = NULL;
+    SPB_CONTEXT* SpbContext = NULL;
+
+    if (Context == NULL)
+    {
+        STDebugPrint(
+            TRACE_LEVEL_ERROR,
+            TRACE_POWER,
+            "TchPowerSettingCallback: Context is NULL"
+        );
+
+        status = STATUS_INVALID_PARAMETER;
+        goto exit;
+    }
+
+    devContext = (PDEVICE_EXTENSION)Context;
+    ControllerContext = (RMI4_CONTROLLER_CONTEXT*)devContext->TouchContext;
+    SpbContext = &(devContext->I2CContext);
+
+    //
+    // Power Source change
+    //
+    if (IsEqualGUID(&GUID_ACDC_POWER_SOURCE, SettingGuid))
+    {
+        STDebugPrint(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_POWER,
+            "Power State Change Notification");
+
+        if (ValueLength != sizeof(DWORD))
+        {
+            STDebugPrint(
+                TRACE_LEVEL_ERROR,
+                TRACE_POWER,
+                "TchPowerSettingCallback: Unexpected value size."
+            );
+
+            status = STATUS_INVALID_PARAMETER;
+            goto exit;
+        }
+
+        DWORD PowerState = *(DWORD*)Value;
+        switch (PowerState)
+        {
+        // On Battery
+        case PoAc:
+            STDebugPrint(
+                TRACE_LEVEL_INFORMATION,
+                TRACE_POWER,
+                "On Battery Power");
+
+            status = RmiChangeChargerConnectedState(
+                ControllerContext,
+                SpbContext,
+                0
+            );
+
+            if (!NT_SUCCESS(status))
+            {
+                STDebugPrint(
+                    TRACE_LEVEL_ERROR,
+                    TRACE_POWER,
+                    "Error Changing Charger Connected state - 0x%08lX",
+                    status);
+                goto exit;
+            }
+            break;
+        // Plugged In
+        case PoDc:
+        case PoHot:
+            STDebugPrint(
+                TRACE_LEVEL_INFORMATION,
+                TRACE_POWER,
+                "On External Power");
+
+            status = RmiChangeChargerConnectedState(
+                ControllerContext,
+                SpbContext,
+                1
+            );
+
+            if (!NT_SUCCESS(status))
+            {
+                STDebugPrint(
+                    TRACE_LEVEL_ERROR,
+                    TRACE_POWER,
+                    "Error Changing Charger Connected state - 0x%08lX",
+                    status);
+                goto exit;
+            }
+            break;
+        default:
+            STDebugPrint(
+                TRACE_LEVEL_ERROR,
+                TRACE_POWER,
+                "Unknown power state - 0x%02hhX",
+                PowerState);
+        }
+    }
+
+    exit:
+    return status;
+}
 
 NTSTATUS 
 TchWakeDevice(
@@ -76,7 +191,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
-            "Error waking touch controller - %!STATUS!",
+            "Error waking touch controller - 0x%08lX",
             status);
     }
 
@@ -133,7 +248,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
-            "Error sleeping touch controller - %!STATUS!",
+            "Error sleeping touch controller - 0x%08lX",
             status);
     }
 

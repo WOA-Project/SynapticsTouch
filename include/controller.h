@@ -75,3 +75,10 @@ TchServiceInterrupts(
     OUT BOOLEAN *ServicingComplete
 );
 
+NTSTATUS
+TchPowerSettingCallback(
+    _In_ LPCGUID SettingGuid,
+    _In_ PVOID Value,
+    _In_ ULONG ValueLength,
+    _Inout_opt_ PVOID Context
+);

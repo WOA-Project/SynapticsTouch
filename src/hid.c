@@ -20,7 +20,8 @@ const UCHAR gReportDescriptor[] = {
     SYNAPTICS_RMI4_DIGITIZER_FINGER,
     SYNAPTICS_RMI4_DIGITIZER_REPORTMODE,
     SYNAPTICS_RMI4_DIGITIZER_KEYPAD,
-    SYNAPTICS_RMI4_DIGITIZER_STYLUS
+    SYNAPTICS_RMI4_DIGITIZER_STYLUS,
+    SYNAPTICS_RMI4_DIGITIZER_RADIAL_CONTROLLER
 };
 const ULONG gdwcbReportDescriptor = sizeof(gReportDescriptor);
 
@@ -81,7 +82,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Failed to forward HID request to I/O queue - %!STATUS!",
+            "Failed to forward HID request to I/O queue - 0x%08lX",
             status);
 
         goto exit;
@@ -194,7 +195,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Error getting device string - %!STATUS!",
+            "Error getting device string - 0x%08lX",
             status);
     }
     
@@ -246,7 +247,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Error getting HID descriptor request memory - %!STATUS!",
+            "Error getting HID descriptor request memory - 0x%08lX",
             status);
         goto exit;
     }
@@ -265,7 +266,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Error copying HID descriptor to request memory - %!STATUS!",
+            "Error copying HID descriptor to request memory - 0x%08lX",
             status);
         goto exit;
     }
@@ -328,7 +329,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Error getting HID report descriptor request memory - %!STATUS!",
+            "Error getting HID report descriptor request memory - 0x%08lX",
             status);
         goto exit;
     }
@@ -347,7 +348,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Error copying HID report descriptor to request memory - %!STATUS!",
+            "Error copying HID report descriptor to request memory - 0x%08lX",
             status);
         goto exit;
     }
@@ -405,7 +406,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
-            "Error retrieving device attribute output buffer - %!STATUS!",
+            "Error retrieving device attribute output buffer - 0x%08lX",
             status);
         goto exit;
     }
@@ -631,7 +632,7 @@ Return Value:
 			capsReport->MaximumContactPoints = PTP_MAX_CONTACT_POINTS;
 			capsReport->ReportID = REPORTID_DEVICE_CAPS;
 
-            if (devContext->TouchContext != NULL)
+            if (devContext->TouchContext != NULL && ((RMI4_CONTROLLER_CONTEXT*)devContext->TouchContext)->MaxFingers != 0)
             {
                 capsReport->MaximumContactPoints = ((RMI4_CONTROLLER_CONTEXT*)devContext->TouchContext)->MaxFingers;
             }

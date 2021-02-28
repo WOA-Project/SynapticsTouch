@@ -87,7 +87,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
-            "Error creating WDF driver object - %!STATUS!",
+            "Error creating WDF driver object - 0x%08lX",
             status);
 
         WPP_CLEANUP(DriverObject);
@@ -171,7 +171,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
-            "WdfDeviceCreate failed - %!STATUS!",
+            "WdfDeviceCreate failed - 0x%08lX",
             status);
 
         goto exit;
@@ -203,7 +203,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
-            "Error creating WDF default queue - %!STATUS!",
+            "Error creating WDF default queue - 0x%08lX",
             status);
 
         goto exit;
@@ -229,7 +229,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
-            "Error creating WDF read request queue - %!STATUS!",
+            "Error creating WDF read request queue - 0x%08lX",
             status);
 
         goto exit;
@@ -257,7 +257,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
-            "Error creating WDF idle request queue - %!STATUS!", 
+            "Error creating WDF idle request queue - 0x%08lX", 
             status);
 
         goto exit;
@@ -283,7 +283,7 @@ Return Value:
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_INIT,
-            "Error creating WDF interrupt object - %!STATUS!",
+            "Error creating WDF interrupt object - 0x%08lX",
             status);
 
         goto exit;

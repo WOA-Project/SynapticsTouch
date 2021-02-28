@@ -5,6 +5,28 @@
 
 #include "controller.h"
 
+#define DEFINE_GUID2(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+        EXTERN_C const GUID DECLSPEC_SELECTANY name \
+                = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+
+// AC/DC power source
+// ------------------
+//
+
+// Specifies the power source for the system.  consumers may register for
+// notification when the power source changes and will be notified with
+// one of 3 values:
+// 0 - Indicates the system is being powered by an AC power source.
+// 1 - Indicates the system is being powered by a DC power source.
+// 2 - Indicates the system is being powered by a short-term DC power
+//     source.  For example, this would be the case if the system is
+//     being powed by a short-term battery supply in a backing UPS
+//     system.  When this value is recieved, the consumer should make
+//     preparations for either a system hibernate or system shutdown.
+//
+// { 5D3E9A59-E9D5-4B00-A6BD-FF34FF516548 }
+DEFINE_GUID2(GUID_ACDC_POWER_SOURCE, 0x5D3E9A59, 0xE9D5, 0x4B00, 0xA6, 0xBD, 0xFF, 0x34, 0xFF, 0x51, 0x65, 0x48);
+
 //
 // Device context
 //
@@ -57,6 +79,11 @@ typedef struct _DEVICE_EXTENSION
 	BOOLEAN PtpInputOn;
 	BOOLEAN PtpReportButton;
 	BOOLEAN PtpReportTouch;
+
+    //
+    // PoFx
+    //
+    PVOID PoFxPowerSettingCallbackHandle;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_EXTENSION, GetDeviceContext)

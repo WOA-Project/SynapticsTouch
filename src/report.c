@@ -13,10 +13,10 @@
 
 const USHORT gOEMVendorID = 0x7379;    // "sy"
 const USHORT gOEMProductID = 0x726D;    // "rm"
-const USHORT gOEMVersionID = 3400;
+const USHORT gOEMVersionID = 3708;
 
 const PWSTR gpwstrManufacturerID = L"Synaptics";
-const PWSTR gpwstrProductID = L"3400";
+const PWSTR gpwstrProductID = L"3708";
 const PWSTR gpwstrSerialNumber = L"4";
 
 VOID
@@ -210,17 +210,17 @@ Return Value:
 			&ScratchY,
 			Props);
 
-		HidReport->X = SctatchX;
-		HidReport->Y = ScratchY;
+		HidReport->Contacts[0].X = SctatchX;
+		HidReport->Contacts[0].Y = ScratchY;
 
 		if (Cache->PenSlot[currentlyReporting].fingerStatus)
 		{
-			HidReport->InRange = 1;
-			HidReport->TipSwitch = FINGER_STATUS;
+			HidReport->Contacts[0].InRange = 1;
+			HidReport->Contacts[0].TipSwitch = FINGER_STATUS;
 
 			if (Cache->PenSlot[currentlyReporting].fingerStatus == RMI4_PEN_STATE_PRESENT_WITH_ERASER)
 			{
-				HidReport->Eraser = 1;
+				HidReport->Contacts[0].Eraser = 1;
 			}
 		}
 
@@ -720,7 +720,7 @@ Return Value:
 			STDebugPrint(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
-				"Error servicing interrupts - %!STATUS!",
+				"Error servicing interrupts - 0x%08lX",
 				status);
 
 			*ServicingComplete = FALSE;
@@ -737,7 +737,7 @@ Return Value:
 		STDebugPrint(
 			TRACE_LEVEL_WARNING,
 			TRACE_INTERRUPT,
-			"Ignoring following interrupt flags - %!STATUS!",
+			"Ignoring following interrupt flags - 0x%08lX",
 			controller->InterruptStatus &
 			~(RMI4_INTERRUPT_BIT_0D_CAP_BUTTON |
 				RMI4_INTERRUPT_BIT_2D_TOUCH));
@@ -776,7 +776,7 @@ Return Value:
 			STDebugPrint(
 				TRACE_LEVEL_VERBOSE,
 				TRACE_SAMPLES,
-				"No object data to report - %!STATUS!",
+				"No object data to report - 0x%08lX",
 				status);
 
 			goto exit;
@@ -808,16 +808,10 @@ Return Value:
 			STDebugPrint(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
-				"Error processing touch event - %!STATUS!",
+				"Error processing touch event - 0x%08lX",
 				status);
 		}
-	}
 
-	//
-	// Service a pen data event if indicated by hardware 
-	//
-	if (controller->InterruptStatus & RMI4_INTERRUPT_BIT_2D_TOUCH)
-	{
 		status = RmiServicePenDataInterrupt(
 			ControllerContext,
 			data,
@@ -838,7 +832,7 @@ Return Value:
 			STDebugPrint(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
-				"Error processing pen event - %!STATUS!",
+				"Error processing pen event - 0x%08lX",
 				status);
 		}
 	}

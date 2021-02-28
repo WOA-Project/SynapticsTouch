@@ -1,5 +1,6 @@
 /*++
     Copyright (c) Microsoft Corporation. All Rights Reserved. 
+    Copyright (c) LumiaWOA Authors. All Rights Reserved. 
     Sample code. Dealpoint ID #843729.
 
     Module Name:
@@ -8,7 +9,7 @@
 
     Abstract:
 
-        Contains common types and defintions used internally
+        Contains common types and definitions used internally
         by the F12 digitizer function.
 
     Environment:
@@ -48,8 +49,12 @@
 #define RMI_F12_REPORTING_BEYOND_CLIP      (1 << 7)
 #define RMI_F12_REPORTING_MODE_MASK         7
 
+#define F12_2D_CTRL15   15
+#define F12_2D_CTRL18   18
 #define F12_2D_CTRL20   20
 #define F12_2D_CTRL23   23
+#define F12_2D_CTRL26   26
+#define F12_2D_CTRL40   40
 
 struct synaptics_rmi4_f12_ctrl_8 {
 	union {
@@ -176,30 +181,31 @@ struct synaptics_rmi4_f12_ctrl_18 {
 	};
 };
 
-
-
+#pragma pack(push)
+#pragma pack(1)
 typedef enum _RMI4_F12_REPORTING_FLAGS
 {
 	RMI4_F12_REPORTING_CONTINUOUS_MODE     = 0,
 	RMI4_F12_REPORTING_REDUCED_MODE        = 1,
 	RMI4_F12_REPORTING_WAKEUP_GESTURE_MODE = 2,
 } RMI4_F12_REPORTING_FLAGS;
+#pragma pack(pop)
 
 typedef enum _RMI4_F12_OBJECT_TYPE {
-	RMI4_F12_OBJECT_NONE = 0x00,
-	RMI4_F12_OBJECT_FINGER = 0x01,
-	RMI4_F12_OBJECT_ACTIVE_STYLUS = 0x02,
-	RMI4_F12_OBJECT_PALM = 0x03,
-	RMI4_F12_OBJECT_UNCLASSIFIED_OBJECT = 0x04,
-	RMI4_F12_OBJECT_HOVERING_FINGER = 0x05,
-	RMI4_F12_OBJECT_GLOVED_FINGER = 0x06,
-	RMI4_F12_OBJECT_NARROW_OBJECT = 0x07,
-	RMI4_F12_OBJECT_HAND_EDGE = 0x08,
+	RMI4_F12_OBJECT_NONE = (BYTE)0x00,
+	RMI4_F12_OBJECT_FINGER = (BYTE)0x01,
+	RMI4_F12_OBJECT_ACTIVE_STYLUS = (BYTE)0x02,
+	RMI4_F12_OBJECT_PALM = (BYTE)0x03,
+	RMI4_F12_OBJECT_UNCLASSIFIED_OBJECT = (BYTE)0x04,
+	RMI4_F12_OBJECT_HOVERING_FINGER = (BYTE)0x05,
+	RMI4_F12_OBJECT_GLOVED_FINGER = (BYTE)0x06,
+	RMI4_F12_OBJECT_NARROW_OBJECT = (BYTE)0x07,
+	RMI4_F12_OBJECT_HAND_EDGE = (BYTE)0x08,
 
-	RMI4_F12_OBJECT_COVER = 0x0A,
-	RMI4_F12_OBJECT_STYLUS = 0x0B,
-	RMI4_F12_OBJECT_ERASER = 0x0C,
-	RMI4_F12_OBJECT_SMALL_OBJECT = 0x0D,
+	RMI4_F12_OBJECT_COVER = (BYTE)0x0A,
+	RMI4_F12_OBJECT_STYLUS = (BYTE)0x0B,
+	RMI4_F12_OBJECT_ERASER = (BYTE)0x0C,
+	RMI4_F12_OBJECT_SMALL_OBJECT = (BYTE)0x0D,
 } RMI4_F12_OBJECT_TYPE;
 
 typedef struct _RMI4_F12_FINGER_DATA_REGISTER {

@@ -408,6 +408,11 @@ TchGetScreenProperties(
         gcbRegistryTable,
         TOUCH_POOL_TAG);
 
+    if (regTable == NULL)
+    {
+        return;
+    }
+
     RtlCopyMemory(
         regTable,
         gResParamsRegTable,
@@ -446,7 +451,7 @@ TchGetScreenProperties(
         STDebugPrint(
             TRACE_LEVEL_WARNING,
             TRACE_REGISTRY,
-            "Error retrieving registry configuration - %!STATUS!",
+            "Error retrieving registry configuration - 0x%08lX",
             status);
     }
 

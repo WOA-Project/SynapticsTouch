@@ -599,7 +599,7 @@ TchRegistryGetControllerSettings(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
-            "Error opening device registry key - %!STATUS!",
+            "Error opening device registry key - 0x%08lX",
             status);
 
         goto exit;
@@ -617,7 +617,7 @@ TchRegistryGetControllerSettings(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
-            "Error opening device registry subkey - %!STATUS!",
+            "Error opening device registry subkey - 0x%08lX",
             status);
 
         goto exit;
@@ -643,6 +643,12 @@ TchRegistryGetControllerSettings(
         NonPagedPoolNx,
         gcbRegistryTable,
         TOUCH_POOL_TAG);
+
+    if (regTable == NULL)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto exit;
+    }
 
     RtlCopyMemory(
         regTable,
@@ -676,7 +682,7 @@ TchRegistryGetControllerSettings(
         STDebugPrint(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
-            "Error retrieving registry configuration - %!STATUS!",
+            "Error retrieving registry configuration - 0x%08lX",
             status);
 
         goto exit;
@@ -698,7 +704,7 @@ exit:
         STDebugPrint(
             TRACE_LEVEL_WARNING,
             TRACE_REGISTRY,
-            "Error reading registry config, using defaults! - %!STATUS!",
+            "Error reading registry config, using defaults! - 0x%08lX",
             status);
 
         status = STATUS_SUCCESS;

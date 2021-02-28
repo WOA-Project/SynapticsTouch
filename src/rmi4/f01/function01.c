@@ -20,6 +20,112 @@
 #define LOGICAL_TO_PHYSICAL(LOGICAL_VALUE) ((LOGICAL_VALUE) & 0xff)
 
 NTSTATUS
+RmiChangeChargerConnectedState(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext,
+	IN UCHAR ChargerConnectedState
+)
+{
+	RMI4_F01_CTRL_REGISTERS* controlF01;
+	UCHAR deviceControl = { 0 };
+	int index;
+	NTSTATUS status;
+
+	controlF01 = (RMI4_F01_CTRL_REGISTERS*)&deviceControl;
+
+	STDebugPrint(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_POWER,
+		"Changing charger connected state to %02hhX",
+		ChargerConnectedState);
+
+	//
+	// Find RMI device control function housing charger connected settings
+	// 
+	index = RmiGetFunctionIndex(
+		ControllerContext->Descriptors,
+		ControllerContext->FunctionCount,
+		RMI4_F01_RMI_DEVICE_CONTROL);
+
+	if (index == ControllerContext->FunctionCount)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_POWER,
+			"Power change failure - RMI Function 01 missing");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	status = RmiChangePage(
+		ControllerContext,
+		SpbContext,
+		ControllerContext->FunctionOnPage[index]);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_POWER,
+			"Could not change register page");
+
+		goto exit;
+	}
+
+	//
+	// Read Device Control register
+	//
+	status = SpbReadDataSynchronously(
+		SpbContext,
+		ControllerContext->Descriptors[index].ControlBase,
+		&deviceControl,
+		sizeof(deviceControl)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_POWER,
+			"Could not read charger connected register - 0x%08lX",
+			status);
+
+		goto exit;
+	}
+
+	//
+	// Assign new sleep state
+	//
+	controlF01->DeviceControl.ChargerConnected = ChargerConnectedState;
+
+	//
+	// Write setting back to the controller
+	//
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		ControllerContext->Descriptors[index].ControlBase,
+		&deviceControl,
+		sizeof(deviceControl)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_POWER,
+			"Could not write charger connected register - %X",
+			status);
+
+		goto exit;
+	}
+
+exit:
+
+	return status;
+}
+
+NTSTATUS
 RmiChangeSleepState(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
 	IN SPB_CONTEXT* SpbContext,
@@ -47,12 +153,17 @@ Return Value:
 --*/
 {
 	RMI4_F01_CTRL_REGISTERS* controlF01;
-	UCHAR deviceControl;
+	UCHAR deviceControl = { 0 };
 	int index;
 	NTSTATUS status;
 
 	controlF01 = (RMI4_F01_CTRL_REGISTERS*)&deviceControl;
 
+	STDebugPrint(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_POWER,
+		"Changing sleep state to %02hhX",
+		SleepState);
 	//
 	// Find RMI device control function housing sleep settings
 	// 
@@ -102,7 +213,7 @@ Return Value:
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
-			"Could not read sleep register - %!STATUS!",
+			"Could not read sleep register - 0x%08lX",
 			status);
 
 		goto exit;
@@ -222,7 +333,7 @@ RmiCheckInterrupts(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
-			"Error reading interrupt status - %!STATUS!",
+			"Error reading interrupt status - 0x%08lX",
 			status);
 
 		goto exit;
@@ -312,7 +423,7 @@ RmiCheckInterrupts(
 			STDebugPrint(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
-				"Could not reconfigure chip - %!STATUS!",
+				"Could not reconfigure chip - 0x%08lX",
 				status);
 
 			goto exit;
@@ -385,6 +496,11 @@ RmiConfigureF01(
 		&ControllerContext->Config.DeviceSettings,
 		&controlF01);
 
+	STDebugPrint(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Writing RMI F01 Ctrl settings");
+
 	//
 	// Write settings to controller
 	//
@@ -400,7 +516,7 @@ RmiConfigureF01(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Error writing RMI F01 Ctrl settings - %!STATUS!",
+			"Error writing RMI F01 Ctrl settings - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -419,7 +535,6 @@ RmiConfigureF01(
 	{
 		ControllerContext->DevicePowerState = PowerDeviceD3;
 	}
-
 
 exit:
 	return status;
@@ -502,7 +617,7 @@ RmiGetFirmwareVersion(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Error reading RMI F01 Query registers - %!STATUS!",
+			"Error reading RMI F01 Query registers - 0x%08lX",
 			status);
 
 		goto exit;

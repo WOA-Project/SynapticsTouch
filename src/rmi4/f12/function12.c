@@ -11,6 +11,112 @@
 #include <rmi4\f12\function12.h>
 #include <function12.tmh>
 
+NTSTATUS
+RmiConfigureControlRegister(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext,
+	IN USHORT ControlRegister,
+	IN PVOID Buffer,
+	IN ULONG BufferLength
+)
+{
+	int index;
+	NTSTATUS status;
+	UINT8 indexCtrl;
+
+	//
+	// Find RMI F12 function
+	//
+	index = RmiGetFunctionIndex(
+		ControllerContext->Descriptors,
+		ControllerContext->FunctionCount,
+		RMI4_F12_2D_TOUCHPAD_SENSOR);
+
+	if (index == ControllerContext->FunctionCount)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Set ReportingMode failure - RMI Function 12 missing");
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	status = RmiChangePage(
+		ControllerContext,
+		SpbContext,
+		ControllerContext->FunctionOnPage[index]);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not change register page");
+
+		goto exit;
+	}
+
+	indexCtrl = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, ControlRegister);
+
+	if (indexCtrl == ControllerContext->ControlRegDesc.NumRegisters)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Cannot find F12_2D_CTRL%d offset",
+			ControlRegister);
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	if (ControllerContext->ControlRegDesc.Registers[indexCtrl].RegisterSize < BufferLength)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Unexpected F12_2D_CTRL%d register size: %d",
+			ControlRegister,
+			ControllerContext->ControlRegDesc.Registers[indexCtrl].RegisterSize);
+
+		//status = STATUS_INVALID_DEVICE_STATE;
+		//goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Writing F12_2D_CTRL%d",
+		ControlRegister);
+
+	//
+	// Write setting to the controller
+	//
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		ControllerContext->Descriptors[index].ControlBase + indexCtrl,
+		Buffer,
+		BufferLength
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write F12_2D_CTRL%d register - %X",
+			ControlRegister,
+			status);
+
+		goto exit;
+	}
+
+exit:
+
+	return status;
+}
 
 NTSTATUS
 RmiSetReportingFlagsF12(
@@ -90,7 +196,7 @@ RmiSetReportingFlagsF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Cannot find F12_2D_Ctrl20 offset");
+			"Cannot find F12_2D_CTRL20 offset");
 
 		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
@@ -101,7 +207,7 @@ RmiSetReportingFlagsF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Unexpected F12_2D_Ctrl20 register size");
+			"Unexpected F12_2D_CTRL20 register size");
 
 		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
@@ -122,7 +228,7 @@ RmiSetReportingFlagsF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not read F12_2D_Ctrl20 register - %!STATUS!",
+			"Could not read F12_2D_CTRL20 register - 0x%08lX",
 			status);
 
 		goto exit;
@@ -137,6 +243,11 @@ RmiSetReportingFlagsF12(
 	// Assign new value
 	//
 	reportingControl.ReportingFlags = NewMode;
+
+	STDebugPrint(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Writing F12_2D_CTRL20");
 
 	//
 	// Write setting back to the controller
@@ -153,7 +264,7 @@ RmiSetReportingFlagsF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not write F12_2D_Ctrl20 register - %X",
+			"Could not write F12_2D_CTRL20 register - %X",
 			status);
 
 		goto exit;
@@ -218,7 +329,7 @@ RmiGetReportingConfigurationF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Cannot find F12_2D_Ctrl23 offset");
+			"Cannot find F12_2D_CTRL23 offset");
 
 		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
@@ -229,7 +340,7 @@ RmiGetReportingConfigurationF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Unexpected F12_2D_Ctrl23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
+			"Unexpected F12_2D_CTRL23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
 
 		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
@@ -250,7 +361,7 @@ RmiGetReportingConfigurationF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not read F12_2D_Ctrl23 register - %!STATUS!",
+			"Could not read F12_2D_CTRL23 register - 0x%08lX",
 			status);
 
 		goto exit;
@@ -313,7 +424,7 @@ RmiSetReportingConfigurationF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Cannot find F12_2D_Ctrl23 offset");
+			"Cannot find F12_2D_CTRL23 offset");
 
 		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
@@ -324,11 +435,16 @@ RmiSetReportingConfigurationF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Unexpected F12_2D_Ctrl23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
+			"Unexpected F12_2D_CTRL23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
 
 		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
 	}
+
+	STDebugPrint(
+		TRACE_LEVEL_INFORMATION,
+		TRACE_INIT,
+		"Writing F12_2D_CTRL23");
 
 	//
 	// Write setting back to the controller
@@ -345,7 +461,7 @@ RmiSetReportingConfigurationF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not write F12_2D_Ctrl23 register - %X",
+			"Could not write F12_2D_CTRL23 register - %X",
 			status);
 
 		goto exit;
@@ -419,7 +535,7 @@ RmiConfigureReportingF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"RmiConfigureReportingF12 - %!STATUS!",
+			"RmiConfigureReportingF12 - 0x%08lX",
 			status);
 
 		goto exit;
@@ -815,7 +931,7 @@ RmiConfigureReportingF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"RmiConfigureReportingF12 - %!STATUS!",
+			"RmiConfigureReportingF12 - 0x%08lX",
 			status);
 
 		goto exit;
@@ -834,6 +950,7 @@ RmiConfigureControlRegistersF12(
 )
 {
 	NTSTATUS status;
+	int index;
 	RMI4_F12_QUERY_5_REGISTER Query5Reg = { 0 };
 	RtlZeroMemory(&Query5Reg, sizeof(RMI4_F12_QUERY_5_REGISTER));
 
@@ -841,9 +958,31 @@ RmiConfigureControlRegistersF12(
 		Lumia 950s (Retail) should have
 		the following control registers:
 
-		 8*  9* 10*  15(finger amplitude threshold) 18*
-		 11(jitter level) 12   20(lpwg mode) 22 23(object report enable) 24 25
-		26(glove mode) 27(lpwg mode - report rate) 28(report data) 29 30 33 34 35 36 37 38 39 40
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL8 at 0x15 with a size of 14
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL9 at 0x16 with a size of 21
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL10 at 0x17 with a size of 7
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL11 at 0x18 with a size of 21
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL12 at 0x19 with a size of 4
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL15 at 0x1A with a size of 7
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL18 at 0x1B with a size of 30
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL20 at 0x1C with a size of 3
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL22 at 0x1D with a size of 1
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL23 at 0x1E with a size of 5
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL24 at 0x1F with a size of 6
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL25 at 0x20 with a size of 9
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL26 at 0x21 with a size of 1
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL27 at 0x22 with a size of 5
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL28 at 0x23 with a size of 1
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL29 at 0x24 with a size of 16
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL30 at 0x25 with a size of 16
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL33 at 0x26 with a size of 28
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL34 at 0x27 with a size of 16
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL35 at 0x28 with a size of 19
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL36 at 0x29 with a size of 16
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL37 at 0x2A with a size of 16
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL38 at 0x2B with a size of 16
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL39 at 0x2C with a size of 16
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL40 at 0x2D with a size of 16
 	*/
 
 	status = RmiGetSupportedControlRegistersF12(
@@ -856,8 +995,27 @@ RmiConfigureControlRegistersF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to read the Query 5 Register - %!STATUS!",
+			"Failed to read the Query 5 Register - 0x%08lX",
 			status);
+		goto exit;
+	}
+
+	//
+	// Find RMI F12 function
+	//
+	index = RmiGetFunctionIndex(
+		ControllerContext->Descriptors,
+		ControllerContext->FunctionCount,
+		RMI4_F12_2D_TOUCHPAD_SENSOR);
+
+	if (index == ControllerContext->FunctionCount)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Set ReportingMode failure - RMI Function 12 missing");
+
+		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
 	}
 
@@ -868,11 +1026,16 @@ RmiConfigureControlRegistersF12(
 
 		if ((Query5Reg.Data[DataIndex] & RegisterMask) == RegisterMask)
 		{
+			UINT8 indexCtrl = RmiGetRegisterIndex(&ControllerContext->ControlRegDesc, i);
+
 			STDebugPrint(
 				TRACE_LEVEL_ERROR,
 				TRACE_INIT,
-				"Discovered $12 Control Register F12_2D_CTRL%d",
-				i);
+				"Discovered $12 Control Register F12_2D_CTRL%d at 0x%hhX with a size of %d",
+				i,
+				ControllerContext->Descriptors[index].ControlBase + indexCtrl,
+				ControllerContext->ControlRegDesc.Registers[indexCtrl].RegisterSize
+			);
 
 			status = RmiConfigureControlRegisterF12(
 				ControllerContext,
@@ -885,7 +1048,7 @@ RmiConfigureControlRegistersF12(
 				STDebugPrint(
 					TRACE_LEVEL_ERROR,
 					TRACE_INIT,
-					"Failed to configure $12 Control Register F12_2D_CTRL%d - %!STATUS!",
+					"Failed to configure $12 Control Register F12_2D_CTRL%d - 0x%08lX",
 					i,
 					status);
 				goto exit;
@@ -904,6 +1067,7 @@ RmiQueryDataRegistersF12(
 )
 {
 	NTSTATUS status;
+	int index;
 	RMI4_F12_QUERY_8_REGISTER Query8Reg = { 0 };
 	RtlZeroMemory(&Query8Reg, sizeof(RMI4_F12_QUERY_8_REGISTER));
 
@@ -928,8 +1092,27 @@ RmiQueryDataRegistersF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to read the Query 5 Register - %!STATUS!",
+			"Failed to read the Query 5 Register - 0x%08lX",
 			status);
+		goto exit;
+	}
+
+	//
+	// Find RMI F12 function
+	//
+	index = RmiGetFunctionIndex(
+		ControllerContext->Descriptors,
+		ControllerContext->FunctionCount,
+		RMI4_F12_2D_TOUCHPAD_SENSOR);
+
+	if (index == ControllerContext->FunctionCount)
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Set ReportingMode failure - RMI Function 12 missing");
+
+		status = STATUS_INVALID_DEVICE_STATE;
 		goto exit;
 	}
 
@@ -940,12 +1123,793 @@ RmiQueryDataRegistersF12(
 
 		if ((Query8Reg.Data[DataIndex] & RegisterMask) == RegisterMask)
 		{
+			UINT8 indexData = RmiGetRegisterIndex(&ControllerContext->DataRegDesc, i);
+
 			STDebugPrint(
 				TRACE_LEVEL_ERROR,
 				TRACE_INIT,
-				"Discovered $12 Data Register F12_2D_DATA%d",
-				i);
+				"Discovered $12 Control Register F12_2D_DATA%d at 0x%hhX with a size of %d",
+				i,
+				ControllerContext->Descriptors[index].DataBase + indexData,
+				ControllerContext->DataRegDesc.Registers[indexData].RegisterSize
+			);
 		}
+	}
+
+exit:
+	return status;
+}
+
+NTSTATUS
+RmiWriteRegistersTestF12(
+	IN SPB_CONTEXT* SpbContext
+)
+{
+	NTSTATUS status = STATUS_SUCCESS;
+	int i = 0;
+
+	//BYTE Buffer0[] = { 0x3F };
+	BYTE Buffer1[] = { 0x6F, 0x00, 0x6F, 0x00, 0x31, 0x05, 0x91, 0x09, 0x23, 0x1E };
+	//BYTE Buffer2[] = { 0x80 }; // Configured
+	BYTE Buffer3[] = { 0x01 };
+	BYTE Buffer4[] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x07 };
+	BYTE Buffer5[] = { 0x05 };
+	BYTE Buffer6[] = { 0x00 };
+	BYTE Buffer7[] = { 0x10, 0x00 };
+	BYTE Buffer8[] = { 0x02 };
+	//BYTE Buffer9[] = { 0x04 }; // Charger Connected
+	BYTE BufferA[] = { 0x09, 0x23, 0x1C };
+	//BYTE BufferB[] = { 0x08 };
+
+	// 0xE: ControlState
+	// 0xF: InterruptEnable
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		Buffer0,
+		sizeof(Buffer0)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x1A,
+		Buffer1,
+		sizeof(Buffer1)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0E,
+		Buffer2,
+		sizeof(Buffer2)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		Buffer3,
+		sizeof(Buffer3)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x01,
+		Buffer4,
+		sizeof(Buffer4)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x01,
+		Buffer5,
+		sizeof(Buffer5)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x02,
+		Buffer6,
+		sizeof(Buffer6)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x03,
+		Buffer7,
+		sizeof(Buffer7)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x04,
+		Buffer8,
+		sizeof(Buffer8)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x2D,
+		Buffer3,
+		sizeof(Buffer3)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		Buffer0,
+		sizeof(Buffer0)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x21,
+		Buffer3,
+		sizeof(Buffer3)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x1A,
+		Buffer1,
+		sizeof(Buffer1)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0E,
+		Buffer2,
+		sizeof(Buffer2)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0E,
+		Buffer9,
+		sizeof(Buffer9)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x1B,
+		BufferA,
+		sizeof(BufferA)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		BufferB,
+		sizeof(BufferB)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		Buffer0,
+		sizeof(Buffer0)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x2E,
+		Buffer3,
+		sizeof(Buffer3)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		Buffer0,
+		sizeof(Buffer0)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x21,
+		Buffer3,
+		sizeof(Buffer3)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x1A,
+		Buffer1,
+		sizeof(Buffer1)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0E,
+		Buffer2,
+		sizeof(Buffer2)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0E,
+		Buffer9,
+		sizeof(Buffer9)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x1B,
+		BufferA,
+		sizeof(BufferA)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		BufferB,
+		sizeof(BufferB)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		Buffer0,
+		sizeof(Buffer0)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x2E,
+		Buffer3,
+		sizeof(Buffer3)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0F,
+		Buffer0,
+		sizeof(Buffer0)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x21,
+		Buffer3,
+		sizeof(Buffer3)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x1A,
+		Buffer1,
+		sizeof(Buffer1)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0E,
+		Buffer2,
+		sizeof(Buffer2)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	/*status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x0E,
+		Buffer9,
+		sizeof(Buffer9)
+	);*/
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
+	}
+
+	STDebugPrint(
+		TRACE_LEVEL_ERROR,
+		TRACE_INIT,
+		"SpbWriteDataSynchronously i=%d", i++);
+
+	status = SpbWriteDataSynchronously(
+		SpbContext,
+		0x1B,
+		BufferA,
+		sizeof(BufferA)
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		STDebugPrint(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not write register");
+
+		goto exit;
 	}
 
 exit:
@@ -962,9 +1926,16 @@ RmiConfigureF12(
 	int index;
 
 	BYTE queryF12Addr = 0;
-	char buf;
+	char buf = 0;
 	USHORT data_offset = 0;
 	PRMI_REGISTER_DESC_ITEM item;
+
+	//
+	// Testing Code
+	//
+	RmiWriteRegistersTestF12(
+		SpbContext
+	);
 
 	//
 	// Find 2D touch sensor function and configure it
@@ -1014,7 +1985,7 @@ RmiConfigureF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to read general info register - %!STATUS!",
+			"Failed to read general info register - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -1046,7 +2017,7 @@ RmiConfigureF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to read the Query Register Descriptor - %!STATUS!",
+			"Failed to read the Query Register Descriptor - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -1064,7 +2035,7 @@ RmiConfigureF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to read the Control Register Descriptor - %!STATUS!",
+			"Failed to read the Control Register Descriptor - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -1081,7 +2052,7 @@ RmiConfigureF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to read the Data Register Descriptor - %!STATUS!",
+			"Failed to read the Data Register Descriptor - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -1100,7 +2071,7 @@ RmiConfigureF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to configure $12 Control Registers - %!STATUS!",
+			"Failed to configure $12 Control Registers - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -1115,7 +2086,7 @@ RmiConfigureF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Failed to query $12 Data Registers - %!STATUS!",
+			"Failed to query $12 Data Registers - 0x%08lX",
 			status);
 		goto exit;
 	}
@@ -1209,6 +2180,7 @@ RmiConfigureF12(
 
 exit:
 	return status;
+
 }
 
 NTSTATUS
@@ -1280,9 +2252,11 @@ Return Value:
 		goto exit;
 	}
 
+	ULONG Size = (ULONG)((controller->MaxFingers + 2) * sizeof(RMI4_F12_FINGER_DATA_REGISTER)) + 1;
+
 	controllerData = ExAllocatePoolWithTag(
 		NonPagedPoolNx,
-		(ULONG)(controller->MaxFingers * sizeof(RMI4_F12_FINGER_DATA_REGISTER)),
+		Size,
 		TOUCH_POOL_TAG_F12
 	);
 
@@ -1299,7 +2273,7 @@ Return Value:
 		SpbContext,
 		controller->Descriptors[index].DataBase + (BYTE)controller->Data1Offset,
 		controllerData,
-		(ULONG)(controller->MaxFingers * sizeof(RMI4_F12_FINGER_DATA_REGISTER))
+		Size
 	);
 
 	if (!NT_SUCCESS(status))
@@ -1307,17 +2281,17 @@ Return Value:
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
-			"Error reading finger status data - %!STATUS!",
+			"Error reading finger status data - 0x%08lX",
 			status);
 
 		goto free_buffer;
 	}
 
-	for (i = 0; i < controller->MaxFingers; i++)
+	for (i = 0; i < controller->MaxFingers + 2; i++)
 	{
 		switch (controllerData[i].ObjectTypeAndStatus)
 		{
-		case (BYTE)RMI4_F12_OBJECT_FINGER:
+		case RMI4_F12_OBJECT_FINGER:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
@@ -1328,7 +2302,18 @@ Return Value:
 				i);
 
 			break;
-		case (BYTE)RMI4_F12_OBJECT_HOVERING_FINGER:
+		case RMI4_F12_OBJECT_PALM:
+			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
+			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
+
+			STDebugPrint(
+				TRACE_LEVEL_INFORMATION,
+				TRACE_INTERRUPT,
+				"Finger[%d] status is palm",
+				i);
+
+			break;
+		case RMI4_F12_OBJECT_HOVERING_FINGER:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
@@ -1339,7 +2324,7 @@ Return Value:
 				i);
 
 			break;
-		case (BYTE)RMI4_F12_OBJECT_GLOVED_FINGER:
+		case RMI4_F12_OBJECT_GLOVED_FINGER:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
@@ -1350,7 +2335,7 @@ Return Value:
 				i);
 
 			break;
-		case (BYTE)RMI4_F12_OBJECT_ACTIVE_STYLUS:
+		case RMI4_F12_OBJECT_ACTIVE_STYLUS:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
 
@@ -1361,7 +2346,7 @@ Return Value:
 				i);
 
 			break;
-		case (BYTE)RMI4_F12_OBJECT_STYLUS:
+		case RMI4_F12_OBJECT_STYLUS:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
 
@@ -1372,7 +2357,7 @@ Return Value:
 				i);
 
 			break;
-		case (BYTE)RMI4_F12_OBJECT_ERASER:
+		case RMI4_F12_OBJECT_ERASER:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_ERASER;
 
@@ -1383,7 +2368,7 @@ Return Value:
 				i);
 
 			break;
-		case (BYTE)RMI4_F12_OBJECT_NONE:
+		case RMI4_F12_OBJECT_NONE:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
 
@@ -1526,7 +2511,7 @@ RmiGetSupportedControlRegistersF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not read F12_2D_Query4 register - %!STATUS!",
+			"Could not read F12_2D_Query4 register - 0x%08lX",
 			status);
 
 		goto exit;
@@ -1581,7 +2566,7 @@ RmiGetSupportedControlRegistersF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not read F12_2D_Query5 register - %!STATUS!",
+			"Could not read F12_2D_Query5 register - 0x%08lX",
 			status);
 
 		goto exit;
@@ -1678,7 +2663,7 @@ RmiGetSupportedDataRegistersF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not read F12_2D_Query7 register - %!STATUS!",
+			"Could not read F12_2D_Query7 register - 0x%08lX",
 			status);
 
 		goto exit;
@@ -1733,7 +2718,7 @@ RmiGetSupportedDataRegistersF12(
 		STDebugPrint(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Could not read F12_2D_Query8 register - %!STATUS!",
+			"Could not read F12_2D_Query8 register - 0x%08lX",
 			status);
 
 		goto exit;

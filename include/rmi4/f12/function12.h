@@ -1,5 +1,6 @@
 /*++
     Copyright (c) Microsoft Corporation. All Rights Reserved. 
+    Copyright (c) LumiaWOA Authors. All Rights Reserved. 
     Sample code. Dealpoint ID #843729.
 
     Module Name:
@@ -8,7 +9,7 @@
 
     Abstract:
 
-        Contains function defintions used internally
+        Contains function definitions used internally
         by the F12 digitizer function.
 
     Environment:
