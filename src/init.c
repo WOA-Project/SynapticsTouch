@@ -66,7 +66,7 @@ TchStartDevice(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not build table of RMI functions - 0x%08lX",
@@ -83,7 +83,7 @@ TchStartDevice(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not configure RMI functions - 0x%08lX",
@@ -100,7 +100,7 @@ TchStartDevice(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not get RMI firmware version - 0x%08lX",
@@ -119,7 +119,7 @@ TchStartDevice(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not get interrupt status - 0x%08lX%",
@@ -193,7 +193,7 @@ Return Value:
 
 	if (NULL == context)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not allocate controller context!");
@@ -220,7 +220,7 @@ Return Value:
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not create lock - 0x%08lX",

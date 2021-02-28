@@ -61,7 +61,7 @@ RmiChangePage(
 	}
 	else
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_INFORMATION,
 			TRACE_INIT,
 			"Changing page to %d",
@@ -165,7 +165,7 @@ RmiReadRegisterDescriptor(
 
 	if (size_presence_reg < 0 || size_presence_reg > 35)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"size_presence_reg has invalid size, either less than 0 or larger than 35");
@@ -291,7 +291,7 @@ RmiReadRegisterDescriptor(
 
 		item->NumSubPackets = (BYTE)bitmap_weight(item->SubPacketMap, RMI_REG_DESC_SUBPACKET_BITS);
 
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_INFORMATION,
 			TRACE_INIT,
 			"%s: reg: %d reg size: %ld subpackets: %d",
@@ -312,7 +312,7 @@ exit:
 	return Status;
 
 i2c_read_fail:
-	STDebugPrint(
+	Trace(
 		TRACE_LEVEL_ERROR,
 		TRACE_INIT,
 		"Failed to read general info register - 0x%08lX",
@@ -406,7 +406,7 @@ RmiConfigureFunctions(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not configure function $12 - 0x%08lX",
@@ -442,7 +442,7 @@ RmiConfigureFunctions(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not configure function $01 - 0x%08lX",
@@ -510,7 +510,7 @@ RmiBuildFunctionsTable(
 
 		if (!(NT_SUCCESS(status)))
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_ERROR,
 				TRACE_INIT,
 				"Error returned from SPB/I2C read attempt %d - 0x%08lX",
@@ -546,7 +546,7 @@ RmiBuildFunctionsTable(
 
 			if (!NT_SUCCESS(status))
 			{
-				STDebugPrint(
+				Trace(
 					TRACE_LEVEL_ERROR,
 					TRACE_INIT,
 					"Error attempting to change page - 0x%08lX",
@@ -559,7 +559,7 @@ RmiBuildFunctionsTable(
 		//
 		else
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_INIT,
 				"Discovered function $%x on page %d",
@@ -582,7 +582,7 @@ RmiBuildFunctionsTable(
 	//
 	if (function > RMI4_MAX_FUNCTIONS)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error, encountered more than %d functions, must extend driver",
@@ -593,7 +593,7 @@ RmiBuildFunctionsTable(
 	}
 	if (address <= 0)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error, did not find terminator function 0, address down to %d",
@@ -608,7 +608,7 @@ RmiBuildFunctionsTable(
 	//
 	ControllerContext->FunctionCount = function;
 
-	STDebugPrint(
+	Trace(
 		TRACE_LEVEL_VERBOSE,
 		TRACE_INIT,
 		"Discovered %d RMI functions total",

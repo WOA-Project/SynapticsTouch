@@ -717,7 +717,7 @@ Return Value:
 
 		if (!NT_SUCCESS(status))
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
 				"Error servicing interrupts - 0x%08lX",
@@ -734,7 +734,7 @@ Return Value:
 	if (controller->InterruptStatus &
 		~(RMI4_INTERRUPT_BIT_0D_CAP_BUTTON | RMI4_INTERRUPT_BIT_2D_TOUCH))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_WARNING,
 			TRACE_INTERRUPT,
 			"Ignoring following interrupt flags - 0x%08lX",
@@ -773,7 +773,7 @@ Return Value:
 
 		if (!NT_SUCCESS(status))
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_VERBOSE,
 				TRACE_SAMPLES,
 				"No object data to report - 0x%08lX",
@@ -805,7 +805,7 @@ Return Value:
 		}
 		else
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
 				"Error processing touch event - 0x%08lX",
@@ -829,7 +829,7 @@ Return Value:
 		}
 		else
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
 				"Error processing pen event - 0x%08lX",

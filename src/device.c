@@ -100,7 +100,7 @@ OnInterruptIsr(
 
 		if (!NT_SUCCESS(status))
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_ERROR,
 				TRACE_REPORTING,
 				"No request pending from HIDClass, ignoring report - 0x%08lX",
@@ -122,7 +122,7 @@ OnInterruptIsr(
 
 		if (!NT_SUCCESS(status))
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_VERBOSE,
 				TRACE_SAMPLES,
 				"Error retrieving HID read request output buffer - 0x%08lX",
@@ -137,7 +137,7 @@ OnInterruptIsr(
 			{
 				status = STATUS_BUFFER_TOO_SMALL;
 
-				STDebugPrint(
+				Trace(
 					TRACE_LEVEL_VERBOSE,
 					TRACE_SAMPLES,
 					"Error HID read request buffer is too small (%I64x bytes) - 0x%08lX",
@@ -195,7 +195,7 @@ Return Value:
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Error setting device to D0 - 0x%08lX",
@@ -253,7 +253,7 @@ Return Value:
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Error exiting D0 - 0x%08lX",
@@ -326,7 +326,7 @@ OnPrepareHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error finding CmResourceTypeConnection resource - 0x%08lX",
@@ -342,7 +342,7 @@ OnPrepareHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error in Spb initialization - 0x%08lX",
@@ -358,7 +358,7 @@ OnPrepareHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error allocating touch context - 0x%08lX",
@@ -376,7 +376,7 @@ OnPrepareHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error retrieving controller settings from registry - 0x%08lX",
@@ -392,7 +392,7 @@ OnPrepareHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error starting touch device - 0x%08lX",
@@ -411,7 +411,7 @@ OnPrepareHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error registering power setting callback - 0x%08lX",
@@ -463,7 +463,7 @@ OnReleaseHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error unregistering power setting callback - 0x%08lX",
@@ -474,7 +474,7 @@ OnReleaseHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_PNP,
 			"Error stopping device - 0x%08lX",
@@ -485,7 +485,7 @@ OnReleaseHardware(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_PNP,
 			"Error freeing touch context - 0x%08lX",

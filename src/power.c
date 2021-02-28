@@ -41,7 +41,7 @@ TchPowerSettingCallback(
 
     if (Context == NULL)
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
             "TchPowerSettingCallback: Context is NULL"
@@ -60,14 +60,14 @@ TchPowerSettingCallback(
     //
     if (IsEqualGUID(&GUID_ACDC_POWER_SOURCE, SettingGuid))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_POWER,
             "Power State Change Notification");
 
         if (ValueLength != sizeof(DWORD))
         {
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_ERROR,
                 TRACE_POWER,
                 "TchPowerSettingCallback: Unexpected value size."
@@ -82,7 +82,7 @@ TchPowerSettingCallback(
         {
         // On Battery
         case PoAc:
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_INFORMATION,
                 TRACE_POWER,
                 "On Battery Power");
@@ -95,7 +95,7 @@ TchPowerSettingCallback(
 
             if (!NT_SUCCESS(status))
             {
-                STDebugPrint(
+                Trace(
                     TRACE_LEVEL_ERROR,
                     TRACE_POWER,
                     "Error Changing Charger Connected state - 0x%08lX",
@@ -106,7 +106,7 @@ TchPowerSettingCallback(
         // Plugged In
         case PoDc:
         case PoHot:
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_INFORMATION,
                 TRACE_POWER,
                 "On External Power");
@@ -119,7 +119,7 @@ TchPowerSettingCallback(
 
             if (!NT_SUCCESS(status))
             {
-                STDebugPrint(
+                Trace(
                     TRACE_LEVEL_ERROR,
                     TRACE_POWER,
                     "Error Changing Charger Connected state - 0x%08lX",
@@ -128,10 +128,10 @@ TchPowerSettingCallback(
             }
             break;
         default:
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_ERROR,
                 TRACE_POWER,
-                "Unknown power state - 0x%02hhX",
+                "Unknown power state - 0x%02X",
                 PowerState);
         }
     }
@@ -188,7 +188,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
             "Error waking touch controller - 0x%08lX",
@@ -245,7 +245,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_POWER,
             "Error sleeping touch controller - 0x%08lX",

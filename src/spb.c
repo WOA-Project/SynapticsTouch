@@ -77,7 +77,7 @@ SpbDoWriteDataSynchronously(
 
         if (!NT_SUCCESS(status))
         {
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_ERROR,
                 TRACE_SPB,
                 "Error allocating memory for Spb write - 0x%08lX",
@@ -130,7 +130,7 @@ SpbDoWriteDataSynchronously(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error writing to Spb - 0x%08lX",
@@ -241,7 +241,7 @@ SpbReadDataSynchronously(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error setting address pointer for Spb read - 0x%08lX",
@@ -261,7 +261,7 @@ SpbReadDataSynchronously(
 
         if (!NT_SUCCESS(status))
         {
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_ERROR,
                 TRACE_SPB,
                 "Error allocating memory for Spb read - 0x%08lX",
@@ -295,7 +295,7 @@ SpbReadDataSynchronously(
     if (!NT_SUCCESS(status) || 
         bytesRead != Length)
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error reading from Spb - 0x%08lX",
@@ -415,7 +415,7 @@ SpbTargetInitialize(
     
     if (!NT_SUCCESS(status)) 
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error creating IoTarget object - 0x%08lX", 
@@ -437,7 +437,7 @@ SpbTargetInitialize(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error creating Spb resource hub path string - 0x%08lX",
@@ -458,7 +458,7 @@ SpbTargetInitialize(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error opening Spb target for communication - 0x%08lX", 
@@ -480,7 +480,7 @@ SpbTargetInitialize(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error allocating default memory for Spb write - 0x%08lX",
@@ -498,7 +498,7 @@ SpbTargetInitialize(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error allocating default memory for Spb read - 0x%08lX",
@@ -515,7 +515,7 @@ SpbTargetInitialize(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_SPB,
             "Error creating Spb Waitlock - 0x%08lX",

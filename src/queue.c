@@ -101,7 +101,7 @@ Return Value:
 
     case IOCTL_HID_GET_DEVICE_DESCRIPTOR:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_GET_DEVICE_DESCRIPTOR");
@@ -114,7 +114,7 @@ Return Value:
 
     case IOCTL_HID_GET_DEVICE_ATTRIBUTES:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_GET_DEVICE_ATTRIBUTES");
@@ -127,7 +127,7 @@ Return Value:
 
     case IOCTL_HID_GET_REPORT_DESCRIPTOR:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_GET_REPORT_DESCRIPTOR");
@@ -140,7 +140,7 @@ Return Value:
 
     case IOCTL_HID_GET_STRING:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_GET_STRING");
@@ -153,7 +153,7 @@ Return Value:
 
     case IOCTL_HID_READ_REPORT:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_READ_REPORT");
@@ -166,7 +166,7 @@ Return Value:
     
     case IOCTL_HID_SET_FEATURE:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_SET_FEATURE");
@@ -180,7 +180,7 @@ Return Value:
     
     case IOCTL_HID_GET_FEATURE:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_GET_FEATURE");
@@ -193,7 +193,7 @@ Return Value:
 
     case IOCTL_HID_SEND_IDLE_NOTIFICATION_REQUEST:    
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_SEND_IDLE_NOTIFICATION_REQUEST");
@@ -207,7 +207,7 @@ Return Value:
 
     case IOCTL_HID_WRITE_REPORT:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_WRITE_REPORT");
@@ -217,7 +217,7 @@ Return Value:
         //    
     case IOCTL_HID_ACTIVATE_DEVICE:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_ACTIVATE_DEVICE");
@@ -227,7 +227,7 @@ Return Value:
         //
     case IOCTL_HID_DEACTIVATE_DEVICE:
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID_DEACTIVATE_DEVICE");
@@ -238,7 +238,7 @@ Return Value:
         //
 
     default:
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_HID,
             "IOCTL_HID UNKNOWN");

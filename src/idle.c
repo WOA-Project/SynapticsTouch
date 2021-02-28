@@ -89,7 +89,7 @@ Return Value:
     {
         status = STATUS_INVALID_BUFFER_SIZE;
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error: Input buffer is too small to process idle request - 0x%08lX", 
@@ -109,7 +109,7 @@ Return Value:
     if (idleCallbackInfo == NULL || idleCallbackInfo->IdleCallback == NULL)
     {
         status = STATUS_NO_CALLBACK_ACTIVE;
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error: Idle Notification request %p has no idle callback info - 0x%08lX",
@@ -139,7 +139,7 @@ Return Value:
                     );
 
         if (!NT_SUCCESS(status)) {
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_ERROR,
                 TRACE_HID,
                 "Error creating creating idle work item - 0x%08lX",
@@ -233,7 +233,7 @@ Return Value:
 
         NT_ASSERTMSG("WdfRequestForwardToIoQueue to IdleQueue failed!", FALSE);
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_IDLE,
             "Error forwarding idle notification Request:0x%p to IdleQueue:0x%p - 0x%08lX",
@@ -248,7 +248,7 @@ Return Value:
     }
     else
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_IDLE,
             "Forwarded idle notification Request:0x%p to IdleQueue:0x%p - 0x%08lX",
@@ -302,7 +302,7 @@ Return Value:
     // 
     if (!NT_SUCCESS(status) || (request == NULL))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_WARNING,
             TRACE_IDLE,
             "Error finding idle notification request in IdleQueue:0x%p - 0x%08lX",
@@ -316,7 +316,7 @@ Return Value:
         //
         WdfRequestComplete(request, status);
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_INFORMATION,
             TRACE_IDLE,
             "Completed idle notification Request:0x%p from IdleQueue:0x%p - 0x%08lX",

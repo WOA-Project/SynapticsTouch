@@ -362,7 +362,7 @@ TchTranslateToDisplayCoordinates(
     Y = Y * Props->DisplayViewableHeight / 
         (Props->DisplayAdjustedHeight - Props->DisplayAdjustedButtonHeight);
 
-    STDebugPrint(
+    Trace(
         TRACE_LEVEL_INFORMATION,
         TRACE_REPORTING,
         "In (%d,%d), Out (%d,%d)",
@@ -448,7 +448,7 @@ TchGetScreenProperties(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_WARNING,
             TRACE_REGISTRY,
             "Error retrieving registry configuration - 0x%08lX",
@@ -463,7 +463,7 @@ TchGetScreenProperties(
         Props->TouchPillarBoxWidthRight >=
         Props->TouchPhysicalWidth)
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Invalid pillar box widths provided (%d,%d for %d)",
@@ -482,7 +482,7 @@ TchGetScreenProperties(
         Props->TouchLetterBoxHeightBottom >=
         Props->TouchPhysicalHeight)
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Invalid letter box heights provided (%d,%d for %d)",

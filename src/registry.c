@@ -596,7 +596,7 @@ TchRegistryGetControllerSettings(
   
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Error opening device registry key - 0x%08lX",
@@ -614,7 +614,7 @@ TchRegistryGetControllerSettings(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Error opening device registry subkey - 0x%08lX",
@@ -627,7 +627,7 @@ TchRegistryGetControllerSettings(
 
     if (NULL == hKey)
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Error getting WDM handle to WDF subkey");
@@ -679,7 +679,7 @@ TchRegistryGetControllerSettings(
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_REGISTRY,
             "Error retrieving registry configuration - 0x%08lX",
@@ -701,7 +701,7 @@ exit:
             &gDefaultConfiguration,
             sizeof(RMI4_CONFIGURATION));
 
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_WARNING,
             TRACE_REGISTRY,
             "Error reading registry config, using defaults! - 0x%08lX",

@@ -79,7 +79,7 @@ Return Value:
     
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Failed to forward HID request to I/O queue - 0x%08lX",
@@ -192,7 +192,7 @@ Return Value:
 
     if (!NT_SUCCESS(status))
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error getting device string - 0x%08lX",
@@ -244,7 +244,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error getting HID descriptor request memory - 0x%08lX",
@@ -263,7 +263,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error copying HID descriptor to request memory - 0x%08lX",
@@ -326,7 +326,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error getting HID report descriptor request memory - 0x%08lX",
@@ -345,7 +345,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error copying HID report descriptor to request memory - 0x%08lX",
@@ -403,7 +403,7 @@ Return Value:
 
     if (!NT_SUCCESS(status)) 
     {
-        STDebugPrint(
+        Trace(
             TRACE_LEVEL_ERROR,
             TRACE_HID,
             "Error retrieving device attribute output buffer - 0x%08lX",
@@ -487,7 +487,7 @@ Return Value:
     {
 		case REPORTID_REPORTMODE:
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_REPORTMODE is requested"
@@ -498,7 +498,7 @@ Return Value:
 			{
 			case PTP_COLLECTION_MOUSE:
 			{
-				STDebugPrint(
+				Trace(
 					TRACE_LEVEL_INFORMATION,
 					TRACE_DRIVER,
 					"%!FUNC! Report REPORTID_REPORTMODE requested Mouse Input"
@@ -510,7 +510,7 @@ Return Value:
 			case PTP_COLLECTION_WINDOWS:
 			{
 
-				STDebugPrint(
+				Trace(
 					TRACE_LEVEL_INFORMATION,
 					TRACE_DRIVER,
 					"%!FUNC! Report REPORTID_REPORTMODE requested Windows PTP Input"
@@ -521,7 +521,7 @@ Return Value:
 			}
 			}
 
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_REPORTMODE is fulfilled"
@@ -530,7 +530,7 @@ Return Value:
 		}
         default:
         {
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Unsupported type %d is requested",
@@ -609,7 +609,7 @@ Return Value:
     {
 		case REPORTID_DEVICE_CAPS:
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_DEVICE_CAPS is requested"
@@ -619,7 +619,7 @@ Return Value:
 			ReportSize = sizeof(PTP_DEVICE_CAPS_FEATURE_REPORT);
 			if (featurePacket->reportBufferLen < ReportSize) {
 				status = STATUS_INVALID_BUFFER_SIZE;
-				STDebugPrint(
+				Trace(
 					TRACE_LEVEL_ERROR,
 					TRACE_DRIVER,
 					"%!FUNC! Report buffer is too small"
@@ -637,13 +637,13 @@ Return Value:
                 capsReport->MaximumContactPoints = ((RMI4_CONTROLLER_CONTEXT*)devContext->TouchContext)->MaxFingers;
             }
 
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_DEVICE_CAPS has maximum contact points of %d",
 				capsReport->MaximumContactPoints
 			);
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_DEVICE_CAPS is fulfilled"
@@ -653,7 +653,7 @@ Return Value:
 		}
 		case REPORTID_PTPHQA:
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_PTPHQA is requested"
@@ -664,7 +664,7 @@ Return Value:
 			if (featurePacket->reportBufferLen < ReportSize)
 			{
 				status = STATUS_INVALID_BUFFER_SIZE;
-				STDebugPrint(
+				Trace(
 					TRACE_LEVEL_ERROR,
 					TRACE_DRIVER,
 					"%!FUNC! Report buffer is too small."
@@ -677,7 +677,7 @@ Return Value:
 			*certReport->CertificationBlob = DEFAULT_PTP_HQA_BLOB;
 			certReport->ReportID = REPORTID_PTPHQA;
 
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Report REPORTID_PTPHQA is fulfilled"
@@ -687,7 +687,7 @@ Return Value:
 		}
         case REPORTID_PENHQA:
         {
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_INFORMATION,
                 TRACE_DRIVER,
                 "%!FUNC! Report REPORTID_PENHQA is requested"
@@ -698,7 +698,7 @@ Return Value:
             if (featurePacket->reportBufferLen < ReportSize)
             {
                 status = STATUS_INVALID_BUFFER_SIZE;
-                STDebugPrint(
+                Trace(
                     TRACE_LEVEL_ERROR,
                     TRACE_DRIVER,
                     "%!FUNC! Report buffer is too small."
@@ -711,7 +711,7 @@ Return Value:
             *certReport->CertificationBlob = DEFAULT_PTP_HQA_BLOB;
             certReport->ReportID = REPORTID_PENHQA;
 
-            STDebugPrint(
+            Trace(
                 TRACE_LEVEL_INFORMATION,
                 TRACE_DRIVER,
                 "%!FUNC! Report REPORTID_PENHQA is fulfilled"
@@ -721,7 +721,7 @@ Return Value:
         }
 		default:
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_INFORMATION,
 				TRACE_DRIVER,
 				"%!FUNC! Unsupported type %d is requested",

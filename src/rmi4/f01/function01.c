@@ -33,10 +33,10 @@ RmiChangeChargerConnectedState(
 
 	controlF01 = (RMI4_F01_CTRL_REGISTERS*)&deviceControl;
 
-	STDebugPrint(
+	Trace(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_POWER,
-		"Changing charger connected state to %02hhX",
+		"Changing charger connected state to %X",
 		ChargerConnectedState);
 
 	//
@@ -49,7 +49,7 @@ RmiChangeChargerConnectedState(
 
 	if (index == ControllerContext->FunctionCount)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Power change failure - RMI Function 01 missing");
@@ -65,7 +65,7 @@ RmiChangeChargerConnectedState(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Could not change register page");
@@ -85,7 +85,7 @@ RmiChangeChargerConnectedState(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Could not read charger connected register - 0x%08lX",
@@ -111,7 +111,7 @@ RmiChangeChargerConnectedState(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Could not write charger connected register - %X",
@@ -159,10 +159,10 @@ Return Value:
 
 	controlF01 = (RMI4_F01_CTRL_REGISTERS*)&deviceControl;
 
-	STDebugPrint(
+	Trace(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_POWER,
-		"Changing sleep state to %02hhX",
+		"Changing sleep state to %02X",
 		SleepState);
 	//
 	// Find RMI device control function housing sleep settings
@@ -174,7 +174,7 @@ Return Value:
 
 	if (index == ControllerContext->FunctionCount)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Power change failure - RMI Function 01 missing");
@@ -190,7 +190,7 @@ Return Value:
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Could not change register page");
@@ -210,7 +210,7 @@ Return Value:
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Could not read sleep register - 0x%08lX",
@@ -236,7 +236,7 @@ Return Value:
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_POWER,
 			"Could not write sleep register - %X",
@@ -295,7 +295,7 @@ RmiCheckInterrupts(
 
 	if (index == ControllerContext->FunctionCount)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Unexpected - RMI Function 01 missing");
@@ -311,7 +311,7 @@ RmiCheckInterrupts(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not change register page");
@@ -330,7 +330,7 @@ RmiCheckInterrupts(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
 			"Error reading interrupt status - 0x%08lX",
@@ -358,7 +358,7 @@ RmiCheckInterrupts(
 	{
 		ControllerContext->InvalidConfiguration = TRUE;
 
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
 			"Received status code 2 - invalid configuration");
@@ -369,7 +369,7 @@ RmiCheckInterrupts(
 	{
 		ControllerContext->DeviceFailure = TRUE;
 
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
 			"Received status code 4 - device failure");
@@ -381,7 +381,7 @@ RmiCheckInterrupts(
 		ControllerContext->UnknownStatus = TRUE;
 		ControllerContext->UnknownStatusMessage = data.DeviceStatus.Status;
 
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
 			"Received unknown status code - %d",
@@ -396,7 +396,7 @@ RmiCheckInterrupts(
 	//
 	if (data.DeviceStatus.FlashProg)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
 			"Error, device status indicates chip in programming mode");
@@ -409,7 +409,7 @@ RmiCheckInterrupts(
 	//
 	if (data.DeviceStatus.Unconfigured)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INTERRUPT,
 			"Error, device status indicates chip is unconfigured");
@@ -420,7 +420,7 @@ RmiCheckInterrupts(
 
 		if (!NT_SUCCESS(status))
 		{
-			STDebugPrint(
+			Trace(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
 				"Could not reconfigure chip - 0x%08lX",
@@ -437,7 +437,7 @@ RmiCheckInterrupts(
 	}
 	else
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_VERBOSE,
 			TRACE_INTERRUPT,
 			"Unexpected -- no interrupt status bit set");
@@ -468,7 +468,7 @@ RmiConfigureF01(
 
 	if (index == ControllerContext->FunctionCount)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Unexpected - RMI Function 01 missing");
@@ -484,7 +484,7 @@ RmiConfigureF01(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not change register page");
@@ -496,7 +496,7 @@ RmiConfigureF01(
 		&ControllerContext->Config.DeviceSettings,
 		&controlF01);
 
-	STDebugPrint(
+	Trace(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
 		"Writing RMI F01 Ctrl settings");
@@ -513,7 +513,7 @@ RmiConfigureF01(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error writing RMI F01 Ctrl settings - 0x%08lX",
@@ -576,7 +576,7 @@ RmiGetFirmwareVersion(
 
 	if (index == ControllerContext->FunctionCount)
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Unexpected - RMI Function 01 missing");
@@ -592,7 +592,7 @@ RmiGetFirmwareVersion(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Could not change register page");
@@ -614,7 +614,7 @@ RmiGetFirmwareVersion(
 
 	if (!NT_SUCCESS(status))
 	{
-		STDebugPrint(
+		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
 			"Error reading RMI F01 Query registers - 0x%08lX",
