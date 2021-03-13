@@ -61,6 +61,15 @@ TchWakeDevice(
     );
 
 NTSTATUS
+RtlReadRegistryValue(
+    PCWSTR registry_path, 
+    PCWSTR value_name, 
+    ULONG type, 
+    PVOID data, 
+    ULONG length
+    );
+
+NTSTATUS
 TchRegistryGetControllerSettings(
     IN VOID *ControllerContext,
     IN WDFDEVICE FxDevice

@@ -406,7 +406,7 @@ OnPrepareHardware(
 		&GUID_ACDC_POWER_SOURCE,
 		TchPowerSettingCallback,
 		devContext,
-		devContext->PoFxPowerSettingCallbackHandle
+		&devContext->PoFxPowerSettingCallbackHandle1
 	);
 
 	if (!NT_SUCCESS(status))
@@ -414,7 +414,26 @@ OnPrepareHardware(
 		Trace(
 			TRACE_LEVEL_ERROR,
 			TRACE_INIT,
-			"Error registering power setting callback - 0x%08lX",
+			"Error registering power setting callback (1) - 0x%08lX",
+			status);
+
+		goto exit;
+	}
+
+	status = PoRegisterPowerSettingCallback(
+		NULL,
+		&GUID_CONSOLE_DISPLAY_STATE,
+		TchPowerSettingCallback,
+		devContext,
+		&devContext->PoFxPowerSettingCallbackHandle2
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		Trace(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Error registering power setting callback (2) - 0x%08lX",
 			status);
 
 		goto exit;
@@ -458,7 +477,20 @@ OnReleaseHardware(
 	devContext = GetDeviceContext(FxDevice);
 
 	status = PoUnregisterPowerSettingCallback(
-		devContext->PoFxPowerSettingCallbackHandle
+		devContext->PoFxPowerSettingCallbackHandle1
+	);
+	
+	if (!NT_SUCCESS(status))
+	{
+		Trace(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Error unregistering power setting callback - 0x%08lX",
+			status);
+	}
+
+	status = PoUnregisterPowerSettingCallback(
+		devContext->PoFxPowerSettingCallbackHandle2
 	);
 
 	if (!NT_SUCCESS(status))

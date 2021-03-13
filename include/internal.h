@@ -28,6 +28,13 @@
 DEFINE_GUID2(GUID_ACDC_POWER_SOURCE, 0x5D3E9A59, 0xE9D5, 0x4B00, 0xA6, 0xBD, 0xFF, 0x34, 0xFF, 0x51, 0x65, 0x48);
 
 //
+// Specifies a change in the current monitor's display state.
+//
+// {6fe69556-704a-47a0-8f24-c28d936fda47}
+//
+DEFINE_GUID2(GUID_CONSOLE_DISPLAY_STATE, 0x6fe69556, 0x704a, 0x47a0, 0x8f, 0x24, 0xc2, 0x8d, 0x93, 0x6f, 0xda, 0x47);
+
+//
 // Device context
 //
 
@@ -83,7 +90,8 @@ typedef struct _DEVICE_EXTENSION
     //
     // PoFx
     //
-    PVOID PoFxPowerSettingCallbackHandle;
+    PVOID PoFxPowerSettingCallbackHandle1;
+    PVOID PoFxPowerSettingCallbackHandle2;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_EXTENSION, GetDeviceContext)

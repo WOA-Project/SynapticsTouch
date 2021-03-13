@@ -242,6 +242,8 @@ RmiSetReportingFlagsF12(
 	//
 	// Assign new value
 	//
+	reportingControl.SuppressXCoordinate = 0;
+	reportingControl.SuppressYCoordinate = 0;
 	reportingControl.ReportingFlags = NewMode;
 
 	Trace(
@@ -268,6 +270,15 @@ RmiSetReportingFlagsF12(
 			status);
 
 		goto exit;
+	}
+
+	if ((NewMode & RMI4_F12_REPORTING_WAKEUP_GESTURE_MODE) == RMI4_F12_REPORTING_WAKEUP_GESTURE_MODE)
+	{
+		ControllerContext->GesturesEnabled = TRUE;
+	}
+	else
+	{
+		ControllerContext->GesturesEnabled = FALSE;
 	}
 
 exit:
@@ -958,21 +969,21 @@ RmiConfigureControlRegistersF12(
 		Lumia 950s (Retail) should have
 		the following control registers:
 
-		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL8 at 0x15 with a size of 14
-		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL9 at 0x16 with a size of 21
-		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL10 at 0x17 with a size of 7
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL8 at 0x15 with a size of 14 // ok
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL9 at 0x16 with a size of 21 // incomplete by one
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL10 at 0x17 with a size of 7 // ok
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL11 at 0x18 with a size of 21
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL12 at 0x19 with a size of 4
-		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL15 at 0x1A with a size of 7
-		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL18 at 0x1B with a size of 30
-		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL20 at 0x1C with a size of 3
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL15 at 0x1A with a size of 7 // ok
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL18 at 0x1B with a size of 30 // one too much
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL20 at 0x1C with a size of 3 // ok
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL22 at 0x1D with a size of 1
-		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL23 at 0x1E with a size of 5
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL23 at 0x1E with a size of 5 // ok
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL24 at 0x1F with a size of 6
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL25 at 0x20 with a size of 9
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL26 at 0x21 with a size of 1
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL27 at 0x22 with a size of 5
-		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL28 at 0x23 with a size of 1
+		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL28 at 0x23 with a size of 1 // Report enable/RPT
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL29 at 0x24 with a size of 16
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL30 at 0x25 with a size of 16
 		SynapticsTouch: Discovered $12 Control Register F12_2D_CTRL33 at 0x26 with a size of 28
@@ -1933,9 +1944,9 @@ RmiConfigureF12(
 	//
 	// Testing Code
 	//
-	RmiWriteRegistersTestF12(
+	/*RmiWriteRegistersTestF12(
 		SpbContext
-	);
+	);*/
 
 	//
 	// Find 2D touch sensor function and configure it
@@ -2294,6 +2305,7 @@ Return Value:
 		case RMI4_F12_OBJECT_FINGER:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_NOT_PRESENT;
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,
@@ -2305,6 +2317,7 @@ Return Value:
 		case RMI4_F12_OBJECT_PALM:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_PRESENT_WITH_ACCURATE_POS;
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,
@@ -2316,6 +2329,7 @@ Return Value:
 		case RMI4_F12_OBJECT_HOVERING_FINGER:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_NOT_PRESENT;
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,
@@ -2327,6 +2341,7 @@ Return Value:
 		case RMI4_F12_OBJECT_GLOVED_FINGER:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_NOT_PRESENT;
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,
@@ -2338,6 +2353,7 @@ Return Value:
 		case RMI4_F12_OBJECT_ACTIVE_STYLUS:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_NOT_PRESENT;
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,
@@ -2349,6 +2365,7 @@ Return Value:
 		case RMI4_F12_OBJECT_STYLUS:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_TIP;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_NOT_PRESENT;
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,
@@ -2360,6 +2377,7 @@ Return Value:
 		case RMI4_F12_OBJECT_ERASER:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_PRESENT_WITH_ERASER;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_NOT_PRESENT;
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,
@@ -2371,6 +2389,7 @@ Return Value:
 		case RMI4_F12_OBJECT_NONE:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_NOT_PRESENT;
 
 			Trace(
 				TRACE_LEVEL_VERBOSE,
@@ -2382,6 +2401,7 @@ Return Value:
 		default:
 			Data->FingerStates[i] = RMI4_FINGER_STATE_NOT_PRESENT;
 			Data->PenStates[i] = RMI4_PEN_STATE_NOT_PRESENT;
+			Data->PuckStates[i] = RMI4_PUCK_STATE_NOT_PRESENT;
 
 			Trace(
 				TRACE_LEVEL_INFORMATION,

@@ -38,6 +38,7 @@
 #pragma warning (disable : 4324)
 
 #define F12_DATA1_BYTES_PER_OBJ			8
+
 #define RMI_F12_REPORTING_MODE_CONTINUOUS  (0 << 0)
 #define RMI_F12_REPORTING_MODE_REDUCED     (1 << 0)
 #define RMI_F12_REPORTING_MODE_FS_CHANGE   (2 << 0)
@@ -102,7 +103,7 @@ struct synaptics_rmi4_f12_ctrl_9 {
 			unsigned char average_peak_ratio;
 			unsigned char enable_thick_glove_detection;
 		};
-		unsigned char data[20];
+		unsigned char data[20]; // one more?
 	};
 };
 
@@ -173,11 +174,13 @@ struct synaptics_rmi4_f12_ctrl_18 {
 			unsigned char vee_min_speed;
 			unsigned char vee_angle_tolerance;
 			unsigned char unicode_max_endpoint_gap;
+
 			unsigned char unicode_min_speed;
+
 			unsigned char f12_ctr18_06_orientation : 3;
 			unsigned char f12_ctr18_06_b3__7 : 5;
 		};
-		unsigned char data[32];
+		unsigned char data[32]; // too big by 2
 	};
 };
 
@@ -367,9 +370,9 @@ typedef struct _RMI4_F12_FINGER_REPORT_REGISTER
 		BYTE Data[3];
 		struct
 		{
-			BYTE ReportingFlags;
-			BYTE SupressXCoordinate;
+			BYTE SuppressXCoordinate;
 			BYTE SuppressYCoordinate;
+			BYTE ReportingFlags;
 		};
 	};
 } RMI4_F12_FINGER_REPORT_REGISTER, * PRMI4_F12_FINGER_REPORT_REGISTER;

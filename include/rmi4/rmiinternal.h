@@ -209,6 +209,7 @@ typedef struct _RMI4_DETECTED_OBJECTS
 {
 	BYTE FingerStates[RMI4_MAX_TOUCHES];
 	BYTE PenStates[RMI4_MAX_TOUCHES];
+	BYTE PuckStates[RMI4_MAX_TOUCHES];
 	RMI4_DETECTED_OBJECT_POSITION Positions[RMI4_MAX_TOUCHES];
 } RMI4_DETECTED_OBJECTS;
 
@@ -221,6 +222,11 @@ typedef struct _RMI4_DETECTED_OBJECTS
 #define RMI4_PEN_STATE_PRESENT_WITH_TIP                1
 #define RMI4_PEN_STATE_PRESENT_WITH_ERASER             2
 #define RMI4_PEN_STATE_RESERVED                        3
+
+#define RMI4_PUCK_STATE_NOT_PRESENT                  0
+#define RMI4_PUCK_STATE_PRESENT_WITH_ACCURATE_POS    1
+#define RMI4_PUCK_STATE_PRESENT_WITH_INACCURATE_POS  2
+#define RMI4_PUCK_STATE_RESERVED                     3
 
 //
 // Function $12 - 2-D Touch Sensor
@@ -368,6 +374,16 @@ typedef struct _RMI4_PEN_CACHE
 	ULONG64 ScanTime;
 } RMI4_PEN_CACHE;
 
+typedef struct _RMI4_PUCK_CACHE
+{
+	RMI4_FINGER_INFO PuckSlot[RMI4_MAX_TOUCHES];
+	UINT32 PuckSlotValid;
+	UINT32 PuckSlotDirty;
+	int PuckDownOrder[RMI4_MAX_TOUCHES];
+	int PuckDownCount;
+	ULONG64 ScanTime;
+} RMI4_PUCK_CACHE;
+
 typedef struct _RMI4_CONTROLLER_CONTEXT
 {
 	WDFDEVICE FxDevice;
@@ -412,6 +428,10 @@ typedef struct _RMI4_CONTROLLER_CONTEXT
 	int PensTotal;
 	RMI4_PEN_CACHE PenCache;
 
+	int PucksReported;
+	int PucksTotal;
+	RMI4_PUCK_CACHE PuckCache;
+
 	//
 	// RMI4 F12 state
 	//
@@ -438,6 +458,9 @@ typedef struct _RMI4_CONTROLLER_CONTEXT
 	USHORT Data15Size;
 
 	BYTE MaxFingers;
+
+	BOOLEAN GesturesEnabled;
+	BOOLEAN EscapeStrokeOnce;
 } RMI4_CONTROLLER_CONTEXT;
 
 NTSTATUS

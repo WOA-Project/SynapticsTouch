@@ -502,24 +502,23 @@ TchReadReport(
 		LOGICAL_MINIMUM_2, 0xf0, 0xf1, /* LOGICAL_MINIMUM (-3600) */ \
 		LOGICAL_MAXIMUM_2, 0x10, 0x0e, /* LOGICAL_MAXIMUM (3600) */ \
 		INPUT, 0x06, /* INPUT (Data,Var,Rel) */ \
-		USAGE, 0x30, /* USAGE (X) */ \
-		REPORT_SIZE, 0x10, /* REPORT_SIZE (16) */ \
-		UNIT_EXPONENT, 0x0d, /* UNIT_EXPONENT (-3) */ \
-		UNIT, 0x13, /* UNIT (Inch,EngLinear) */ \
-		PHYSICAL_MINIMUM, 0x00, /* PHYSICAL_MINIMUM (0) */ \
-		PHYSICAL_MAXIMUM_2, 0xc0, 0x5d, /* PHYSICAL_MAXIMUM (24000) */ \
-		LOGICAL_MINIMUM, 0x00, /* LOGICAL_MINIMUM (0) */ \
-		LOGICAL_MAXIMUM_2, 0xff, 0x7f, /* LOGICAL_MAXIMUM (32767) */ \
-		INPUT, 0x02, /* INPUT (Data,Var,Abs) */ \
-		USAGE, 0x31, /* USAGE (Y) */ \
-		PHYSICAL_MAXIMUM_2, 0xb0, 0x36, /* PHYSICAL_MAXIMUM (14000) */ \
-		INPUT, 0x02, /* INPUT (Data,Var,Abs) */ \
+		USAGE, 0x30, /* Usage (X) */ \
+		LOGICAL_MAXIMUM_2, 0xA0, 0x05, /* Logical Maximum (1440) */ \
+		PHYSICAL_MAXIMUM_2, 0xCE, 0x02, /* Physical Maximum (7.18) */ \
+		UNIT, 0x11, /* Unit (System: SI Linear, Length: Centimeter) */ \
+		UNIT_EXPONENT, 0x0E, /* Unit Exponent (-2) */ \
+		REPORT_SIZE, 0x10, /* Report Size (16) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
+		USAGE, 0x31, /* Usage (Y) */ \
+		LOGICAL_MAXIMUM_2, 0x00, 0x0A, /* Logical Maximum (2560) */ \
+		PHYSICAL_MAXIMUM_2, 0xEB, 0x04, /* Physical Maximum (12.59) */ \
+		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
 		USAGE_PAGE, 0x0d, /* USAGE_PAGE (Digitizers) */ \
 		USAGE, 0x48, /* USAGE (Width) */ \
-		PHYSICAL_MINIMUM_2, 0xb8, 0x0b, /* PHYSICAL_MINIMUM (3000) */ \
-		PHYSICAL_MAXIMUM_2, 0xb8, 0x0b, /* PHYSICAL_MAXIMUM (3000) */ \
-		LOGICAL_MINIMUM_2, 0xb8, 0x0b, /* LOGICAL_MINIMUM (3000) */ \
-		LOGICAL_MAXIMUM_2, 0xb8, 0x0b, /* LOGICAL_MAXIMUM (3000) */ \
+		LOGICAL_MINIMUM_2, 0xD0, 0x02, /* Logical Minimum (720) */ \
+		PHYSICAL_MINIMUM_2, 0x67, 0x01, /* Physical Minimum (3.59) */ \
+		LOGICAL_MAXIMUM_2, 0xD0, 0x02, /* Logical Maximum (720) */ \
+		PHYSICAL_MAXIMUM_2, 0x67, 0x01, /* Physical Maximum (3.59) */ \
 		INPUT, 0x03, /* INPUT (Cnst,Var,Abs) */ \
 		PHYSICAL_MAXIMUM, 0x00, /* Physical Maximum: 0 */ \
 		UNIT_EXPONENT, 0x00, /* Unit exponent: 0 */ \
@@ -700,6 +699,24 @@ TchReadReport(
 		SYNAPTICS_RMI4_DIGITIZER_PUCK_CONTACT_1, /* Puck (1) */ \
 	END_COLLECTION /* END_COLLECTION */
 
+#define SYNAPTICS_RMI4_DIGITIZER_WAKE_BUTTON \
+	USAGE_PAGE, 0x01, /* Generic Desktop */ \
+	USAGE, 0x80, /* System Control */ \
+	BEGIN_COLLECTION, 0x01, /* Application */ \
+		REPORT_ID, REPORTID_WAKEBUTTON, \
+		USAGE, 0x81, /* System power down */\
+		USAGE, 0x83, /* System wake up */\
+		USAGE, 0x84, /* System power */ \
+		LOGICAL_MINIMUM, 0x00, \
+		LOGICAL_MAXIMUM, 0x01, \
+		REPORT_SIZE, 0x01, \
+		REPORT_COUNT, 0x03, \
+		INPUT, 0x02, /* (Data,Var,Abs) */ \
+		REPORT_COUNT, 0x01, \
+		REPORT_SIZE, 0x05, \
+		INPUT, 0x03, /* (Cnst,Var,Abs) */ \
+	END_COLLECTION
+
 #define DEFAULT_PTP_HQA_BLOB \
 	0xfc, 0x28, 0xfe, 0x84, 0x40, 0xcb, 0x9a, 0x87, \
 	0x0d, 0xbe, 0x57, 0x3c, 0xb6, 0x70, 0x09, 0x88, \
@@ -809,10 +826,39 @@ typedef struct _PTP_DEVICE_STYLUS_REPORT {
 	//USHORT            ScanTime;
 } PTP_DEVICE_STYLUS_REPORT, * PPTP_DEVICE_STYLUS_REPORT;
 
+// REPORTID_RADIALCONTROLLER
+#pragma pack(push)
+#pragma pack(1)
+typedef struct _PTP_DEVICE_PUCK {
+	UCHAR  Button : 1;
+	USHORT Dial   : 15;
+	USHORT X;
+	USHORT Y;
+	USHORT wX;
+	USHORT wY;
+} PTP_DEVICE_PUCK, * PPTP_DEVICE_PUCK;
+#pragma pack(pop)
+typedef struct _PTP_DEVICE_PUCK_REPORT {
+	UCHAR            ReportID;
+	PTP_DEVICE_PUCK  Contacts[1];
+	//USHORT           ScanTime;
+} PTP_DEVICE_PUCK_REPORT, * PPTP_DEVICE_PUCK_REPORT;
+
+// Wake Button
+typedef struct _PTP_DEVICE_WAKE_BUTTON_REPORT {
+	UCHAR ReportID;
+	BYTE  SystemPowerDown : 1;
+	BYTE  SystemWakeUp    : 1;
+	BYTE  SystemPower     : 1;
+	BYTE  Padding         : 5;
+} PTP_DEVICE_WAKE_BUTTON_REPORT, * PPTP_DEVICE_WAKE_BUTTON_REPORT;
+
 // General Type
 typedef union _DEV_REPORT
 {
 	PTP_DEVICE_STYLUS_REPORT PenReport;
 	PTP_DEVICE_FINGER_REPORT PtpReport;
 	PTP_DEVICE_KEYPAD_REPORT KeyReport;
+	PTP_DEVICE_PUCK_REPORT  PuckReport;
+	PTP_DEVICE_WAKE_BUTTON_REPORT WakeReport;
 } DEV_REPORT, * PDEV_REPORT;

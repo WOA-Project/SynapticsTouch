@@ -23,6 +23,7 @@
 #include <spb.h>
 #include <rmi4\rmiinternal.h>
 #include <rmi4\f01\function01.h>
+#include <rmi4\f12\function12.h>
 #include <power.tmh>
 #include <internal.h>
 
@@ -47,7 +48,7 @@ TchPowerSettingCallback(
             "TchPowerSettingCallback: Context is NULL"
         );
 
-        status = STATUS_INVALID_PARAMETER;
+        status = STATUS_INVALID_DEVICE_REQUEST;
         goto exit;
     }
 
@@ -73,7 +74,7 @@ TchPowerSettingCallback(
                 "TchPowerSettingCallback: Unexpected value size."
             );
 
-            status = STATUS_INVALID_PARAMETER;
+            status = STATUS_INVALID_DEVICE_REQUEST;
             goto exit;
         }
 
@@ -133,6 +134,110 @@ TchPowerSettingCallback(
                 TRACE_POWER,
                 "Unknown power state - 0x%02X",
                 PowerState);
+        }
+    }
+    else if (IsEqualGUID(&GUID_CONSOLE_DISPLAY_STATE, SettingGuid))
+    {
+        Trace(
+            TRACE_LEVEL_INFORMATION,
+            TRACE_POWER,
+            "Monitor State Change Notification");
+
+        if (ValueLength != sizeof(DWORD))
+        {
+            Trace(
+                TRACE_LEVEL_ERROR,
+                TRACE_POWER,
+                "TchPowerSettingCallback: Unexpected value size."
+            );
+
+            status = STATUS_INVALID_DEVICE_REQUEST;
+            goto exit;
+        }
+
+        DWORD DisplayState = *(DWORD*)Value;
+        DWORD GestureEnabled = 0;
+
+        switch (DisplayState)
+        {
+        case 0:
+            Trace(
+                TRACE_LEVEL_INFORMATION,
+                TRACE_POWER,
+                "The Display is Off");
+
+            if (NT_SUCCESS(RtlReadRegistryValue(
+                (PCWSTR)L"\\Registry\\Machine\\SOFTWARE\\OEM\\Nokia\\Touch\\WakeupGesture",
+                (PCWSTR)L"DoubleTapToWake",
+                REG_DWORD,
+                &GestureEnabled,
+                sizeof(DWORD))) && GestureEnabled == 1)
+            {
+                status = RmiSetReportingFlagsF12(
+                    ControllerContext,
+                    SpbContext,
+                    RMI4_F12_REPORTING_WAKEUP_GESTURE_MODE,
+                    NULL
+                );
+
+                if (!NT_SUCCESS(status))
+                {
+                    Trace(
+                        TRACE_LEVEL_ERROR,
+                        TRACE_POWER,
+                        "Error Changing Reporting Mode for F12 - 0x%08lX",
+                        status);
+                    goto exit;
+                }
+            }
+
+            if (!NT_SUCCESS(status))
+            {
+                Trace(
+                    TRACE_LEVEL_ERROR,
+                    TRACE_POWER,
+                    "Error Changing Reporting Mode for F12 - 0x%08lX",
+                    status);
+                goto exit;
+            }
+
+            break;
+        case 1:
+            Trace(
+                TRACE_LEVEL_INFORMATION,
+                TRACE_POWER,
+                "The Display is On");
+
+            status = RmiSetReportingFlagsF12(
+                ControllerContext,
+                SpbContext,
+                RMI4_F12_REPORTING_CONTINUOUS_MODE,
+                NULL
+            );
+
+            if (!NT_SUCCESS(status))
+            {
+                Trace(
+                    TRACE_LEVEL_ERROR,
+                    TRACE_POWER,
+                    "Error Changing Reporting Mode for F12 - 0x%08lX",
+                    status);
+                goto exit;
+            }
+            break;
+        case 2:
+            Trace(
+                TRACE_LEVEL_INFORMATION,
+                TRACE_POWER,
+                "The Display is Dimmed");
+
+            break;
+        default:
+            Trace(
+                TRACE_LEVEL_ERROR,
+                TRACE_POWER,
+                "Unknown display state - 0x%02X",
+                DisplayState);
         }
     }
 
@@ -268,6 +373,12 @@ Return Value:
     controller->PenCache.PenSlotValid = 0;
     controller->PenCache.PenSlotDirty = 0;
     controller->PenCache.PenDownCount = 0;
+
+    controller->PucksReported = 0;
+    controller->PucksTotal = 0;
+    controller->PuckCache.PuckSlotValid = 0;
+    controller->PuckCache.PuckSlotDirty = 0;
+    controller->PuckCache.PuckDownCount = 0;
 
     WdfWaitLockRelease(controller->ControllerLock);
 
