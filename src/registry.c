@@ -543,7 +543,14 @@ static const ULONG gcbRegistryTable = sizeof(gRegistryTable);
 static const ULONG gcRegistryTable = 
     sizeof(gRegistryTable) / sizeof(gRegistryTable[0]);
 
-NTSTATUS RtlReadRegistryValue(PCWSTR registry_path, PCWSTR value_name, ULONG type, PVOID data, ULONG length)
+NTSTATUS
+RtlReadRegistryValue(
+    PCWSTR registry_path, 
+    PCWSTR value_name, 
+    ULONG type, 
+    PVOID data, 
+    ULONG length
+)
 {
     UNICODE_STRING valname;
     UNICODE_STRING keyname;
