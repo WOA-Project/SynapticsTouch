@@ -18,10 +18,11 @@
 
 --*/
 
-#include <compat.h>
+#include <Cross Platform Shim\compat.h>
 #include <spb.h>
 #include <rmi4\f01\function01.h>
 #include <rmi4\f12\function12.h>
+#include <rmi4\f1a\function1a.h>
 #include <rmi4\rmiinternal.h>
 #include <rmiinternal.tmh>
 
@@ -131,6 +132,250 @@ RmiGetFunctionIndex(
 	// Return the count if the index wasn't found
 	//
 	return i;
+}
+
+NTSTATUS
+RmiConfigureFunctions(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext
+)
+/*++
+
+  Routine Description:
+
+	RMI4 devices such as this Synaptics touch controller are organized
+	as collections of logical functions. Discovered functions must be
+	configured, which is done in this function (things like sleep
+	timeouts, interrupt enables, report rates, etc.)
+
+  Arguments:
+
+	ControllerContext - A pointer to the current touch controller
+	context
+
+	SpbContext - A pointer to the current i2c context
+
+  Return Value:
+
+	NTSTATUS indicating success or failure
+
+--*/
+{
+	NTSTATUS status;
+
+	status = RmiConfigureF12(
+		ControllerContext,
+		SpbContext
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		Trace(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not configure function $12 - 0x%08lX",
+			status);
+
+		goto exit;
+	}
+
+	status = RmiConfigureF1A(
+		ControllerContext,
+		SpbContext
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		Trace(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not configure function $1A - 0x%08lX",
+			status);
+
+		goto exit;
+	}
+
+	status = RmiConfigureF01(
+		ControllerContext,
+		SpbContext
+	);
+
+	if (!NT_SUCCESS(status))
+	{
+		Trace(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Could not configure function $01 - 0x%08lX",
+			status);
+
+		goto exit;
+	}
+
+exit:
+	return status;
+}
+
+NTSTATUS
+RmiBuildFunctionsTable(
+	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
+	IN SPB_CONTEXT* SpbContext
+)
+/*++
+
+  Routine Description:
+
+	RMI4 devices such as this Synaptics touch controller are organized
+	as collections of logical functions. When initially communicating
+	with the chip, a driver must build a table of available functions,
+	as is done in this routine.
+
+  Arguments:
+
+	ControllerContext - A pointer to the current touch controller context
+
+	SpbContext - A pointer to the current i2c context
+
+  Return Value:
+
+	NTSTATUS indicating success or failure
+
+--*/
+{
+	UCHAR address;
+	int function;
+	int page;
+	NTSTATUS status;
+
+
+	//
+	// First function is at a fixed address 
+	//
+	function = 0;
+	address = RMI4_FIRST_FUNCTION_ADDRESS;
+	page = 0;
+
+	//
+	// Discover chip functions one by one
+	//
+	do
+	{
+		//
+		// Read function descriptor
+		//
+		status = SpbReadDataSynchronously(
+			SpbContext,
+			address,
+			&ControllerContext->Descriptors[function],
+			sizeof(RMI4_FUNCTION_DESCRIPTOR));
+
+		if (!(NT_SUCCESS(status)))
+		{
+			Trace(
+				TRACE_LEVEL_ERROR,
+				TRACE_INIT,
+				"Error returned from SPB/I2C read attempt %d - 0x%08lX",
+				function,
+				status);
+			goto exit;
+		}
+
+		//
+		// Function number 0 implies "last function" on this register page,
+		// and if this "last function" is the first function on the page, there
+		// are no more functions to discover.
+		//
+		if (ControllerContext->Descriptors[function].Number == 0 &&
+			address == RMI4_FIRST_FUNCTION_ADDRESS)
+		{
+			break;
+		}
+		//
+		// If we've exhausted functions on this page, look for more functions
+		// on the next register page
+		//
+		else if (ControllerContext->Descriptors[function].Number == 0 &&
+			address != RMI4_FIRST_FUNCTION_ADDRESS)
+		{
+			page++;
+			address = RMI4_FIRST_FUNCTION_ADDRESS;
+
+			status = RmiChangePage(
+				ControllerContext,
+				SpbContext,
+				page);
+
+			if (!NT_SUCCESS(status))
+			{
+				Trace(
+					TRACE_LEVEL_ERROR,
+					TRACE_INIT,
+					"Error attempting to change page - 0x%08lX",
+					status);
+				goto exit;
+			}
+		}
+		//
+		// Descriptor stored, look for next or terminator
+		//
+		else
+		{
+			Trace(
+				TRACE_LEVEL_VERBOSE,
+				TRACE_INIT,
+				"Discovered function $%x",
+				ControllerContext->Descriptors[function].Number);
+
+			ControllerContext->FunctionOnPage[function] = page;
+			function++;
+			address = address - sizeof(RMI4_FUNCTION_DESCRIPTOR);
+		}
+
+	} while (
+		(address > 0) &&
+		(function < RMI4_MAX_FUNCTIONS));
+
+	//
+	// If we swept the address space without finding an "end function"
+	// or maxed-out the total number of functions supported by the 
+	// driver, note the error and exit.
+	//
+	if (function >= RMI4_MAX_FUNCTIONS)
+	{
+		Trace(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Error, encountered more than %d functions, must extend driver",
+			RMI4_MAX_FUNCTIONS);
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+	if (address <= 0)
+	{
+		Trace(
+			TRACE_LEVEL_ERROR,
+			TRACE_INIT,
+			"Error, did not find terminator function 0, address down to %d",
+			address);
+
+		status = STATUS_INVALID_DEVICE_STATE;
+		goto exit;
+	}
+
+	//
+	// Note the total number of functions that exist
+	//
+	ControllerContext->FunctionCount = function;
+
+	Trace(
+		TRACE_LEVEL_VERBOSE,
+		TRACE_INIT,
+		"Discovered %d RMI functions total",
+		function);
+
+exit:
+
+	return status;
 }
 
 NTSTATUS
@@ -367,254 +612,4 @@ UINT8 RmiGetRegisterIndex(
 	}
 
 	return Rdesc->NumRegisters;
-}
-
-NTSTATUS
-RmiConfigureFunctions(
-	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-	IN SPB_CONTEXT* SpbContext
-)
-/*++
-
-  Routine Description:
-
-	RMI4 devices such as this Synaptics touch controller are organized
-	as collections of logical functions. Discovered functions must be
-	configured, which is done in this function (things like sleep
-	timeouts, interrupt enables, report rates, etc.)
-
-  Arguments:
-
-	ControllerContext - A pointer to the current touch controller
-	context
-
-	SpbContext - A pointer to the current i2c context
-
-  Return Value:
-
-	NTSTATUS indicating success or failure
-
---*/
-{
-	int index;
-	NTSTATUS status;
-
-	status = RmiConfigureF12(
-		ControllerContext,
-		SpbContext
-	);
-
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Could not configure function $12 - 0x%08lX",
-			status);
-
-		goto exit;
-	}
-
-	//
-	// Find 0D capacitive button sensor function and configure it if it exists
-	//
-	index = RmiGetFunctionIndex(
-		ControllerContext->Descriptors,
-		ControllerContext->FunctionCount,
-		RMI4_F1A_0D_CAP_BUTTON_SENSOR);
-
-	if (index != ControllerContext->FunctionCount)
-	{
-		ControllerContext->HasButtons = TRUE;
-
-		//
-		// TODO: Get configuration data from registry once Synaptics
-		//       provides sane default values. Until then, assume the
-		//       object is configured for the desired product scenario
-		//       by default.
-		//
-	}
-
-	status = RmiConfigureF01(
-		ControllerContext,
-		SpbContext
-	);
-
-	if (!NT_SUCCESS(status))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Could not configure function $01 - 0x%08lX",
-			status);
-
-		goto exit;
-	}
-
-exit:
-	return status;
-}
-
-NTSTATUS
-RmiBuildFunctionsTable(
-	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-	IN SPB_CONTEXT* SpbContext
-)
-/*++
-
-  Routine Description:
-
-	RMI4 devices such as this Synaptics touch controller are organized
-	as collections of logical functions. When initially communicating
-	with the chip, a driver must build a table of available functions,
-	as is done in this routine.
-
-  Arguments:
-
-	ControllerContext - A pointer to the current touch controller context
-
-	SpbContext - A pointer to the current i2c context
-
-  Return Value:
-
-	NTSTATUS indicating success or failure
-
---*/
-{
-	UCHAR address;
-	int function;
-	int page;
-	NTSTATUS status;
-
-
-	//
-	// First function is at a fixed address 
-	//
-	function = 0;
-	address = RMI4_FIRST_FUNCTION_ADDRESS;
-	page = 0;
-
-	//
-	// Discover chip functions one by one
-	//
-	do
-	{
-		//
-		// Read function descriptor
-		//
-		status = SpbReadDataSynchronously(
-			SpbContext,
-			address,
-			&ControllerContext->Descriptors[function],
-			sizeof(RMI4_FUNCTION_DESCRIPTOR));
-
-		if (!(NT_SUCCESS(status)))
-		{
-			Trace(
-				TRACE_LEVEL_ERROR,
-				TRACE_INIT,
-				"Error returned from SPB/I2C read attempt %d - 0x%08lX",
-				function,
-				status);
-			goto exit;
-		}
-
-		//
-		// Function number 0 implies "last function" on this register page,
-		// and if this "last function" is the first function on the page, there
-		// are no more functions to discover.
-		//
-		if (ControllerContext->Descriptors[function].Number == 0 &&
-			address == RMI4_FIRST_FUNCTION_ADDRESS)
-		{
-			break;
-		}
-		//
-		// If we've exhausted functions on this page, look for more functions
-		// on the next register page
-		//
-		else if (ControllerContext->Descriptors[function].Number == 0 &&
-			address != RMI4_FIRST_FUNCTION_ADDRESS)
-		{
-			page++;
-			address = RMI4_FIRST_FUNCTION_ADDRESS;
-
-			status = RmiChangePage(
-				ControllerContext,
-				SpbContext,
-				page);
-
-			if (!NT_SUCCESS(status))
-			{
-				Trace(
-					TRACE_LEVEL_ERROR,
-					TRACE_INIT,
-					"Error attempting to change page - 0x%08lX",
-					status);
-				goto exit;
-			}
-		}
-		//
-		// Descriptor stored, look for next or terminator
-		//
-		else
-		{
-			Trace(
-				TRACE_LEVEL_INFORMATION,
-				TRACE_INIT,
-				"Discovered function $%x on page %d",
-				ControllerContext->Descriptors[function].Number,
-				page);
-
-			ControllerContext->FunctionOnPage[function] = page;
-			function++;
-			address = address - sizeof(RMI4_FUNCTION_DESCRIPTOR);
-		}
-
-	} while (
-		(address > 0) &&
-		(function < RMI4_MAX_FUNCTIONS));
-
-	//
-	// If we swept the address space without finding an "end function"
-	// or maxed-out the total number of functions supported by the 
-	// driver, note the error and exit.
-	//
-	if (function > RMI4_MAX_FUNCTIONS)
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Error, encountered more than %d functions, must extend driver",
-			RMI4_MAX_FUNCTIONS);
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-	if (address <= 0)
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Error, did not find terminator function 0, address down to %d",
-			address);
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
-	//
-	// Note the total number of functions that exist
-	//
-	ControllerContext->FunctionCount = function;
-
-	Trace(
-		TRACE_LEVEL_VERBOSE,
-		TRACE_INIT,
-		"Discovered %d RMI functions total",
-		function);
-
-exit:
-
-	return status;
 }

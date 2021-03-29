@@ -1,6 +1,7 @@
 /*++
-    Copyright (c) Microsoft Corporation. All Rights Reserved. 
-    Sample code. Dealpoint ID #843729.
+    Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
     Module Name:
 
@@ -19,25 +20,11 @@
 
 --*/
 
-#include <compat.h>
 #include <internal.h>
 #include <controller.h>
 #include <queue.h>
 #include <hid.h>
 #include <idle.h>
-#include <queue.tmh>
-
-VOID
-OnDeviceControl(
-	_In_ WDFQUEUE Queue,
-	_In_ WDFREQUEST Request,
-	_In_ size_t OutputBufferLength,
-	_In_ size_t InputBufferLength,
-	_In_ ULONG IoControlCode
-)
-{
-	OnInternalDeviceControl(Queue, Request, OutputBufferLength, InputBufferLength, IoControlCode);
-}
 
 VOID
 OnInternalDeviceControl(
@@ -46,12 +33,12 @@ OnInternalDeviceControl(
     IN size_t OutputBufferLength,
     IN size_t InputBufferLength,
     IN ULONG IoControlCode
-    )
+)
 /*++
 
 Routine Description:
 
-    This event is called when the framework receives 
+    This event is called when the framework receives
     IRP_MJ_INTERNAL DEVICE_CONTROL requests from the system.
 
 Arguments:
@@ -83,7 +70,7 @@ Return Value:
 
     UNREFERENCED_PARAMETER(OutputBufferLength);
     UNREFERENCED_PARAMETER(InputBufferLength);
-    
+
     device = WdfIoQueueGetDevice(Queue);
     devContext = GetDeviceContext(device);
     requestPending = FALSE;
@@ -97,152 +84,89 @@ Return Value:
     // use retreive function or escape to WDM to get the UserBuffer.
     //
 
-    switch(IoControlCode) {
+    switch (IoControlCode) {
 
     case IOCTL_HID_GET_DEVICE_DESCRIPTOR:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_GET_DEVICE_DESCRIPTOR");
-
         //
         // Retrieves master HID descriptor 
         //
+
         status = TchGetHidDescriptor(device, Request);
         break;
 
     case IOCTL_HID_GET_DEVICE_ATTRIBUTES:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_GET_DEVICE_ATTRIBUTES");
-
         //
         // Retrieves device attributes in a HID_DEVICE_ATTRIBUTES structure
         //
+
         status = TchGetDeviceAttributes(Request);
         break;
 
     case IOCTL_HID_GET_REPORT_DESCRIPTOR:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_GET_REPORT_DESCRIPTOR");
-
         //
         // Obtains the report descriptor for the HID device
         //
+
         status = TchGetReportDescriptor(device, Request);
         break;
 
     case IOCTL_HID_GET_STRING:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_GET_STRING");
-
         //
         // Obtains strings associated with the HID device
         //
+
         status = TchGetString(device, Request);
         break;
 
     case IOCTL_HID_READ_REPORT:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_READ_REPORT");
-
         //
         // Dangling read requests for passing up touch data
         //
+
         status = TchReadReport(device, Request, &requestPending);
         break;
-    
+
     case IOCTL_HID_SET_FEATURE:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_SET_FEATURE");
-
         //
         // This sends a HID class feature report to a top-level collection of
         // a HID class device.
         //
+
         status = TchSetFeatureReport(device, Request);
         break;
-    
+
     case IOCTL_HID_GET_FEATURE:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_GET_FEATURE");
-
         //
         // Returns a feature report associated with a top-level collection
         //
+
         status = TchGetFeatureReport(device, Request);
         break;
 
-    case IOCTL_HID_SEND_IDLE_NOTIFICATION_REQUEST:    
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_SEND_IDLE_NOTIFICATION_REQUEST");
-
+    case IOCTL_HID_SEND_IDLE_NOTIFICATION_REQUEST:
         //
         // Hidclass sends this IOCTL to notify miniports that it wants
         // them to go into idle
         //
+
         status = TchProcessIdleRequest(device, Request, &requestPending);
         break;
 
     case IOCTL_HID_WRITE_REPORT:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_WRITE_REPORT");
-
         //
         // Transmits a class driver-supplied report to the device.
         //    
     case IOCTL_HID_ACTIVATE_DEVICE:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_ACTIVATE_DEVICE");
-
         //
         // Makes the device ready for I/O operations.
         //
     case IOCTL_HID_DEACTIVATE_DEVICE:
-
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID_DEACTIVATE_DEVICE");
-
         //
         // Causes the device to cease operations and terminate all outstanding
         // I/O requests.
         //
 
     default:
-        Trace(
-            TRACE_LEVEL_INFORMATION,
-            TRACE_HID,
-            "IOCTL_HID UNKNOWN");
-
         status = STATUS_NOT_SUPPORTED;
         break;
     }
@@ -251,6 +175,6 @@ Return Value:
     {
         WdfRequestComplete(Request, status);
     }
-    
+
     return;
 }

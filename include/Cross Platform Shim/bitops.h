@@ -1,5 +1,5 @@
 #pragma once
-#include "compat.h"
+#include <Cross Platform Shim\compat.h>
 
 #ifndef __BITOPS_H__
 #define __BITOPS_H__

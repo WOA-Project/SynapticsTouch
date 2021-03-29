@@ -1,6 +1,7 @@
 /*++
     Copyright (c) Microsoft Corporation. All Rights Reserved.
-    Sample code. Dealpoint ID #843729.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
     Module Name:
 
@@ -9,7 +10,7 @@
     Abstract:
 
         This file contains the declarations for Power Idle specific callbacks
-	    and function definitions
+        and function definitions
 
     Environment:
 
@@ -19,7 +20,6 @@
 
 --*/
 
-#include <compat.h>
 #include <internal.h>
 #include <controller.h>
 #include <idle.h>
@@ -29,8 +29,8 @@ NTSTATUS
 TchProcessIdleRequest(
     IN WDFDEVICE Device,
     IN WDFREQUEST Request,
-    OUT BOOLEAN *Pending
-    )
+    OUT BOOLEAN* Pending
+)
 /*++
 
 Routine Description:
@@ -133,10 +133,10 @@ Return Value:
         WDF_WORKITEM_CONFIG_INIT(&workitemConfig, TchIdleIrpWorkitem);
 
         status = WdfWorkItemCreate(
-                    &workitemConfig,
-                    &workItemAttributes,
-                    &idleWorkItem
-                    );
+            &workitemConfig,
+            &workItemAttributes,
+            &idleWorkItem
+        );
 
         if (!NT_SUCCESS(status)) {
             Trace(
@@ -153,7 +153,7 @@ Return Value:
         idleWorkItemContext = GetWorkItemContext(idleWorkItem);
         idleWorkItemContext->FxDevice = devContext->FxDevice;
         idleWorkItemContext->FxRequest = Request;
-    
+
         //
         // Enqueue a workitem for the idle callback
         //
@@ -174,12 +174,12 @@ exit:
 VOID
 TchIdleIrpWorkitem(
     IN WDFWORKITEM IdleWorkItem
-    )
+)
 /*++
 
 Routine Description:
- 
-    This is a workitem routine that TchProcessIdleRequest queues when 
+
+    This is a workitem routine that TchProcessIdleRequest queues when
     handling the HIDClass's idle notification IRP, so the idle callback can be made in
     a different thread context, instead of the Idle Irp's dispatch call.
 
@@ -192,13 +192,13 @@ Return Value:
     VOID
 
 --*/
-{ 
+{
     NTSTATUS status;
     PIDLE_WORKITEM_CONTEXT idleWorkItemContext;
     PDEVICE_EXTENSION deviceContext;
     PHID_SUBMIT_IDLE_NOTIFICATION_CALLBACK_INFO idleCallbackInfo;
 
-    idleWorkItemContext = GetWorkItemContext(IdleWorkItem);    
+    idleWorkItemContext = GetWorkItemContext(IdleWorkItem);
     NT_ASSERT(idleWorkItemContext != NULL);
 
     deviceContext = GetDeviceContext(idleWorkItemContext->FxDevice);
@@ -207,7 +207,7 @@ Return Value:
     //
     // Get the idle callback info from the workitem context
     //
-    idleCallbackInfo = (PHID_SUBMIT_IDLE_NOTIFICATION_CALLBACK_INFO) 
+    idleCallbackInfo = (PHID_SUBMIT_IDLE_NOTIFICATION_CALLBACK_INFO)
         IoGetCurrentIrpStackLocation(WdfRequestWdmGetIrp(idleWorkItemContext->FxRequest))->\
         Parameters.DeviceIoControl.Type3InputBuffer;
 
@@ -221,8 +221,8 @@ Return Value:
     // This way if the IRP was cancelled, WDF will cancel it for us
     //
     status = WdfRequestForwardToIoQueue(
-                            idleWorkItemContext->FxRequest,
-                            deviceContext->IdleQueue);
+        idleWorkItemContext->FxRequest,
+        deviceContext->IdleQueue);
 
     if (!NT_SUCCESS(status))
     {
@@ -256,7 +256,7 @@ Return Value:
             deviceContext->IdleQueue,
             status);
     }
-    
+
     //
     // Delete the workitem since we're done with it
     //
@@ -269,12 +269,12 @@ Return Value:
 VOID
 TchCompleteIdleIrp(
     IN PDEVICE_EXTENSION FxDeviceContext
-    )
+)
 /*++
 
 Routine Description:
- 
-    This is invoked when we enter D0. 
+
+    This is invoked when we enter D0.
     We simply complete the Idle Irp if it hasn't been cancelled already.
 
 Arguments:
@@ -283,7 +283,7 @@ Arguments:
 
 Return Value:
 
-    
+
 
 --*/
 {
@@ -294,8 +294,8 @@ Return Value:
     // Lets try to retrieve the Idle IRP from the Idle queue
     //
     status = WdfIoQueueRetrieveNextRequest(
-                FxDeviceContext->IdleQueue,
-                &request);
+        FxDeviceContext->IdleQueue,
+        &request);
 
     //
     // We did not find the Idle IRP, maybe it was cancelled

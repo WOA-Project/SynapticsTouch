@@ -2,7 +2,7 @@
 // Copyright (c) Bingxing Wang. All Rights Reserved. 
 // Copyright (c) LumiaWOA authors. All Rights Reserved. 
 
-#include <compat.h>
+#include <Cross Platform Shim\compat.h>
 #include <spb.h>
 #include <rmi4\rmiinternal.h>
 #include <rmi4\f01\function01.h>

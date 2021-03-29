@@ -303,7 +303,7 @@ TchReadReport(
 	USAGE_PAGE, 0x0d, /* Usage Page: Digitizer */ \
 	USAGE, 0x02, /* Usage: Pen */ \
 	BEGIN_COLLECTION, 0x01, /* Begin Collection: Application */ \
-		REPORT_ID, REPORTID_PEN, /* Report ID: Pen */ \
+		REPORT_ID, REPORTID_STYLUS, /* Report ID: Pen */ \
 		USAGE, 0x20, /* Usage: Stylus */ \
 		SYNAPTICS_PEN_COLLECTION_1, /* 1 */  \
 		USAGE_PAGE, 0x0d, /* Usage Page: Digitizer */ \
@@ -648,11 +648,12 @@ TchReadReport(
 
 #define SYNAPTICS_RMI4_DIGITIZER_KEYPAD \
 	USAGE_PAGE, 0x01, /* Usage Page (Generic Desktop Ctrls) */ \
-	USAGE, 0xEE, /* Usage (0xEE) */ \
+	USAGE, 0x0D, /* Usage (Portable Device Control) */ \
 	BEGIN_COLLECTION, 0x01, /* Collection (Application) */ \
 		REPORT_ID, REPORTID_KEYPAD, /* Report ID (9) */ \
-		USAGE_PAGE, 0x07, /* Usage Page (Kbrd/Keypad) */ \
-		USAGE, 0x3B, /* Usage (Keyboard F2) */ \
+		\
+		USAGE_PAGE, 0x01, /* USAGE_PAGE (Generic Desktop Page) */ \
+		USAGE, 0x81, /* System Power Down */\
 		LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
 		LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
 		PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
@@ -662,13 +663,44 @@ TchReadReport(
 		REPORT_SIZE, 0x01, /* Report Size (1) */ \
 		REPORT_COUNT, 0x01, /* Report Count (1) */ \
 		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
-		USAGE, 0x3C, /* Usage (Keyboard F3) */ \
+		\
+		USAGE_PAGE, 0x07, /* USAGE_PAGE (Keyboard Page) */ \
+		USAGE, 0xE3, /* Keyboard Left GUI */\
+		LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
+		LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
+		PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
+		PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
+		UNIT, 0x00, /* Unit (None) */ \
+		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
+		REPORT_SIZE, 0x01, /* Report Size (1) */ \
+		REPORT_COUNT, 0x01, /* Report Count (1) */ \
 		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
-		USAGE, 0x29, /* Usage (Keyboard ESCAPE) */ \
+		\
+		USAGE_PAGE, 0x0C, /* USAGE_PAGE (Consumer Page) */ \
+		USAGE_2, 0x21, 0x02, /* AC Search */\
+		LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
+		LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
+		PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
+		PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
+		UNIT, 0x00, /* Unit (None) */ \
+		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
+		REPORT_SIZE, 0x01, /* Report Size (1) */ \
+		REPORT_COUNT, 0x01, /* Report Count (1) */ \
 		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
-		USAGE, 0x68, /* Usage (Keyboard F13) */ \
+		\
+		USAGE_PAGE, 0x0C, /* USAGE_PAGE (Consumer Page) */ \
+		USAGE_2, 0x24, 0x02, /* AC Back */\
+		LOGICAL_MINIMUM, 0x00, /* Logical Minimum (0) */ \
+		LOGICAL_MAXIMUM, 0x01, /* Logical Maximum (1) */ \
+		PHYSICAL_MINIMUM, 0x00, /* Physical Minimum (0) */ \
+		PHYSICAL_MAXIMUM, 0x01, /* Physical Maximum (1) */ \
+		UNIT, 0x00, /* Unit (None) */ \
+		UNIT_EXPONENT, 0x00, /* Unit Exponent (0) */ \
+		REPORT_SIZE, 0x01, /* Report Size (1) */ \
+		REPORT_COUNT, 0x01, /* Report Count (1) */ \
 		INPUT, 0x02, /* Input: (Data, Var, Abs) */ \
-		REPORT_COUNT, 0x1C, /* Report Count (28) */ \
+		\
+		REPORT_COUNT, 0x1c, /* Report Count (28) */ \
 		INPUT, 0x03, /* Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position) */ \
 	END_COLLECTION /* End Collection */
 
@@ -688,34 +720,6 @@ TchReadReport(
 		REPORT_COUNT_2, 0x00, 0x01, \
 		FEATURE, 0x02, \
 	END_COLLECTION /* End Collection */
-
-#define SYNAPTICS_RMI4_DIGITIZER_RADIAL_CONTROLLER \
-	USAGE_PAGE, 0x01, /* USAGE_PAGE (Generic Desktop) */ \
-	USAGE, 0x0e, /* USAGE (System Multi-Axis Controller) */ \
-	BEGIN_COLLECTION, 0x01, /* COLLECTION (Application) */ \
-		REPORT_ID, REPORTID_RADIALCONTROLLER, /* REPORT_ID (Radial Controller) */ \
-		USAGE_PAGE, 0x0d, /* USAGE_PAGE (Digitizers) */ \
-		USAGE, 0x21, /* USAGE (Puck) */ \
-		SYNAPTICS_RMI4_DIGITIZER_PUCK_CONTACT_1, /* Puck (1) */ \
-	END_COLLECTION /* END_COLLECTION */
-
-#define SYNAPTICS_RMI4_DIGITIZER_WAKE_BUTTON \
-	USAGE_PAGE, 0x01, /* Generic Desktop */ \
-	USAGE, 0x80, /* System Control */ \
-	BEGIN_COLLECTION, 0x01, /* Application */ \
-		REPORT_ID, REPORTID_WAKEBUTTON, \
-		USAGE, 0x81, /* System power down */\
-		USAGE, 0x83, /* System wake up */\
-		USAGE, 0x84, /* System power */ \
-		LOGICAL_MINIMUM, 0x00, \
-		LOGICAL_MAXIMUM, 0x01, \
-		REPORT_SIZE, 0x01, \
-		REPORT_COUNT, 0x03, \
-		INPUT, 0x02, /* (Data,Var,Abs) */ \
-		REPORT_COUNT, 0x01, \
-		REPORT_SIZE, 0x05, \
-		INPUT, 0x03, /* (Cnst,Var,Abs) */ \
-	END_COLLECTION
 
 #define DEFAULT_PTP_HQA_BLOB \
 	0xfc, 0x28, 0xfe, 0x84, 0x40, 0xcb, 0x9a, 0x87, \
@@ -770,10 +774,18 @@ typedef struct _PTP_DEVICE_HQA_CERTIFICATION_REPORT {
 	UCHAR CertificationBlob[256];
 } PTP_DEVICE_HQA_CERTIFICATION_REPORT, * PPTP_DEVICE_HQA_CERTIFICATION_REPORT;
 
+// 
+// Type defintions
+//
+
+#pragma warning(push)
+#pragma warning(disable:4201)  // (nameless struct/union)
+#include <pshpack1.h>
+
 // REPORTID_FINGER
 #pragma pack(push)
 #pragma pack(1)
-typedef struct _PTP_DEVICE_FINGER {
+typedef struct _HID_TOUCH_FINGER {
 	UCHAR		TipSwitch  : 1;
 	UCHAR		InRange    : 1;
 	UCHAR		Confidence : 1;
@@ -781,32 +793,29 @@ typedef struct _PTP_DEVICE_FINGER {
 	UCHAR		ContactID;
 	USHORT		X;
 	USHORT		Y;
-} PTP_DEVICE_FINGER, * PPTP_DEVICE_FINGER;
+} HID_TOUCH_FINGER, * PHID_TOUCH_FINGER;
 #pragma pack(pop)
-typedef struct _PTP_DEVICE_FINGER_REPORT {
-	UCHAR             ReportID;
-	PTP_DEVICE_FINGER Contacts[2];
-	//USHORT            ScanTime;
-	UCHAR             ContactCount;
-} PTP_DEVICE_FINGER_REPORT, * PPTP_DEVICE_FINGER_REPORT;
+
+typedef struct _HID_TOUCH_REPORT {
+	HID_TOUCH_FINGER Contacts[2];
+	UCHAR            ContactCount;
+} HID_TOUCH_REPORT, * PHID_TOUCH_REPORT;
 
 // REPORTID_KEYPAD
-typedef struct _PTP_DEVICE_KEYPAD_REPORT {
-	UCHAR ReportID;
-	UCHAR F2        : 1;
-	UCHAR F3        : 1;
-	UCHAR ESCAPE    : 1;
-	UCHAR F13       : 1;
-	UCHAR Padding0  : 4;
-	UCHAR Padding1;
-	UCHAR Padding2;
-	UCHAR Padding3;
-} PTP_DEVICE_KEYPAD_REPORT, * PPTP_DEVICE_KEYPAD_REPORT;
+typedef struct _HID_KEY_REPORT {
+	UCHAR  SystemPowerDown : 1;
+	UCHAR  Start           : 1;
+	UCHAR  ACSearch        : 1;
+	UCHAR  ACBack          : 1;
+	UCHAR  rReserved       : 4;
+	UCHAR  bReserved;
+	USHORT wReserved;
+} HID_KEY_REPORT, * PHID_KEY_REPORT;
 
 // REPORTID_STYLUS
 #pragma pack(push)
 #pragma pack(1)
-typedef struct _PTP_DEVICE_STYLUS {
+typedef struct _HID_PEN_REPORT {
 	UCHAR  TipSwitch    : 1;
 	UCHAR  BarrelSwitch : 1;
 	UCHAR  Invert       : 1;
@@ -818,47 +827,22 @@ typedef struct _PTP_DEVICE_STYLUS {
 	UCHAR  TipPressure;
 	UCHAR  XTilt;
 	UCHAR  YTilt;
-} PTP_DEVICE_STYLUS, * PPTP_DEVICE_STYLUS;
+} HID_PEN_REPORT, * PHID_PEN_REPORT;
 #pragma pack(pop)
-typedef struct _PTP_DEVICE_STYLUS_REPORT {
-	UCHAR             ReportID;
-	PTP_DEVICE_STYLUS Contacts[1];
-	//USHORT            ScanTime;
-} PTP_DEVICE_STYLUS_REPORT, * PPTP_DEVICE_STYLUS_REPORT;
 
-// REPORTID_RADIALCONTROLLER
-#pragma pack(push)
-#pragma pack(1)
-typedef struct _PTP_DEVICE_PUCK {
-	UCHAR  Button : 1;
-	USHORT Dial   : 15;
-	USHORT X;
-	USHORT Y;
-	USHORT wX;
-	USHORT wY;
-} PTP_DEVICE_PUCK, * PPTP_DEVICE_PUCK;
-#pragma pack(pop)
-typedef struct _PTP_DEVICE_PUCK_REPORT {
-	UCHAR            ReportID;
-	PTP_DEVICE_PUCK  Contacts[1];
-	//USHORT           ScanTime;
-} PTP_DEVICE_PUCK_REPORT, * PPTP_DEVICE_PUCK_REPORT;
-
-// Wake Button
-typedef struct _PTP_DEVICE_WAKE_BUTTON_REPORT {
-	UCHAR ReportID;
-	BYTE  SystemPowerDown : 1;
-	BYTE  SystemWakeUp    : 1;
-	BYTE  SystemPower     : 1;
-	BYTE  Padding         : 5;
-} PTP_DEVICE_WAKE_BUTTON_REPORT, * PPTP_DEVICE_WAKE_BUTTON_REPORT;
-
-// General Type
-typedef union _DEV_REPORT
+typedef struct _HID_INPUT_REPORT
 {
-	PTP_DEVICE_STYLUS_REPORT PenReport;
-	PTP_DEVICE_FINGER_REPORT PtpReport;
-	PTP_DEVICE_KEYPAD_REPORT KeyReport;
-	PTP_DEVICE_PUCK_REPORT  PuckReport;
-	PTP_DEVICE_WAKE_BUTTON_REPORT WakeReport;
-} DEV_REPORT, * PDEV_REPORT;
+	UCHAR ReportID;
+	union
+	{
+		HID_TOUCH_REPORT TouchReport;
+		HID_PEN_REPORT   PenReport;
+		HID_KEY_REPORT   KeyReport;
+	};
+#ifdef _TIMESTAMP_
+	LARGE_INTEGER TimeStamp;
+#endif
+} HID_INPUT_REPORT, * PHID_INPUT_REPORT;
+
+#include <poppack.h>
+#pragma warning(pop)

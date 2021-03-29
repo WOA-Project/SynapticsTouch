@@ -25,8 +25,8 @@
 #include <wdf.h>
 #include <controller.h>
 #include <resolutions.h>
-#include <bitops.h>
-#include <hweight.h>
+#include <Cross Platform Shim/bitops.h>
+#include <Cross Platform Shim/hweight.h>
 
 // Ignore warning C4152: nonstandard extension, function/data pointer conversion in expression
 #pragma warning (disable : 4152)
@@ -58,6 +58,7 @@
 
 #define RMI4_MAX_FUNCTIONS                10
 #define RMI4_MAX_TOUCHES                  32
+#define RMI4_MAX_BUTTONS                  3
 
 typedef struct _RMI4_FUNCTION_DESCRIPTOR
 {
@@ -213,6 +214,11 @@ typedef struct _RMI4_DETECTED_OBJECTS
 	RMI4_DETECTED_OBJECT_POSITION Positions[RMI4_MAX_TOUCHES];
 } RMI4_DETECTED_OBJECTS;
 
+typedef struct _RMI4_DETECTED_BUTTONS
+{
+	BYTE ButtonStates[RMI4_MAX_BUTTONS];
+} RMI4_DETECTED_BUTTONS;
+
 #define RMI4_FINGER_STATE_NOT_PRESENT                  0
 #define RMI4_FINGER_STATE_PRESENT_WITH_ACCURATE_POS    1
 #define RMI4_FINGER_STATE_PRESENT_WITH_INACCURATE_POS  2
@@ -253,83 +259,6 @@ typedef struct _RMI_REGISTER_DESCRIPTOR {
 	UINT8 NumRegisters;
 	RMI_REGISTER_DESC_ITEM* Registers;
 } RMI_REGISTER_DESCRIPTOR, * PRMI_REGISTER_DESCRIPTOR;
-
-//
-// Function $1A - 0-D Capacitive Button Sensors
-//
-
-typedef struct _RMI4_F1A_QUERY_REGISTERS
-{
-	struct
-	{
-		BYTE MaxButtonCount : 2;
-		BYTE Reserved0 : 5;
-	};
-	struct
-	{
-		BYTE HasGenControl : 1;
-		BYTE HasIntEnable : 1;
-		BYTE HasMultiButSel : 1;
-		BYTE HasTxRxMapping : 1;
-		BYTE HasPerButThresh : 1;
-		BYTE HasRelThresh : 1;
-		BYTE HasStrongButHyst : 1;
-		BYTE HasFiltStrength : 1;
-	};
-} RMI4_F1A_QUERY_REGISTERS;
-
-typedef struct _RMI4_F1A_CTRL_REGISTERS
-{
-	struct
-	{
-		BYTE MultiButtonRpt : 2;
-		BYTE FilterMode : 2;
-		BYTE Reserved0 : 4;
-	};
-	struct
-	{
-		BYTE IntEnBtn0 : 1;
-		BYTE IntEnBtn1 : 1;
-		BYTE IntEnBtn2 : 1;
-		BYTE IntEnBtn3 : 1;
-		BYTE Reserved1 : 4;
-	};
-	struct
-	{
-		BYTE MultiBtn0 : 1;
-		BYTE MultiBtn1 : 1;
-		BYTE MultiBtn2 : 1;
-		BYTE MultiBtn3 : 1;
-		BYTE Reserved2 : 4;
-	};
-	BYTE PhysicalTx0;
-	BYTE PhysicalRx0;
-	BYTE PhysicalTx1;
-	BYTE PhysicalRx1;
-	BYTE PhysicalTx2;
-	BYTE PhysicalRx2;
-	BYTE PhysicalTx3;
-	BYTE PhysicalRx3;
-	BYTE Threshold0;
-	BYTE Threshold1;
-	BYTE Threshold2;
-	BYTE Threshold3;
-	BYTE ReleaseThreshold;
-	BYTE StrongButtonHyst;
-	BYTE FilterStrength;
-} RMI4_F1A_CTRL_REGISTERS;
-
-typedef struct _RMI4_F1A_DATA_REGISTERS
-{
-	struct
-	{
-		BYTE Button0 : 1;
-		BYTE Button1 : 1;
-		BYTE Button2 : 1;
-		BYTE Button3 : 1;
-		BYTE Reserved0 : 4;
-	};
-} RMI4_F1A_DATA_REGISTERS;
 
 //
 // Function $XX - Add new support functions here
@@ -374,15 +303,25 @@ typedef struct _RMI4_PEN_CACHE
 	ULONG64 ScanTime;
 } RMI4_PEN_CACHE;
 
-typedef struct _RMI4_PUCK_CACHE
+typedef enum _RMI4_REPORTED_BUTTON
 {
-	RMI4_FINGER_INFO PuckSlot[RMI4_MAX_TOUCHES];
-	UINT32 PuckSlotValid;
-	UINT32 PuckSlotDirty;
-	int PuckDownOrder[RMI4_MAX_TOUCHES];
-	int PuckDownCount;
-	ULONG64 ScanTime;
-} RMI4_PUCK_CACHE;
+	BUTTON_NONE = 0,
+	BUTTON_SEARCH,
+	BUTTON_START,
+	BUTTON_BACK,
+	BUTTON_UNKNOWN
+} RMI4_REPORTED_BUTTON;
+
+typedef struct _RMI4_BUTTON_INFO
+{
+	RMI4_REPORTED_BUTTON ReportedButton;
+	UCHAR buttonStatus;
+} RMI4_BUTTON_INFO;
+
+typedef struct _RMI4_BUTTON_CACHE
+{
+	BOOLEAN ButtonSlots[RMI4_MAX_BUTTONS];
+} RMI4_BUTTON_CACHE;
 
 typedef struct _RMI4_CONTROLLER_CONTEXT
 {
@@ -415,6 +354,7 @@ typedef struct _RMI4_CONTROLLER_CONTEXT
 	// Register configuration programmed to chip
 	//
 	TOUCH_SCREEN_PROPERTIES Props;
+	TOUCH_SCREEN_SETTINGS TouchSettings;
 	RMI4_CONFIGURATION Config;
 
 	//
@@ -428,9 +368,7 @@ typedef struct _RMI4_CONTROLLER_CONTEXT
 	int PensTotal;
 	RMI4_PEN_CACHE PenCache;
 
-	int PucksReported;
-	int PucksTotal;
-	RMI4_PUCK_CACHE PuckCache;
+	RMI4_BUTTON_CACHE ButtonCache;
 
 	//
 	// RMI4 F12 state

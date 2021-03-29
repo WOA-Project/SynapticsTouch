@@ -1,7 +1,25 @@
-// Copyright (c) Microsoft Corporation. All Rights Reserved. 
-// Copyright (c) Bingxing Wang. All Rights Reserved. 
+/*++
+    Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
-#include <compat.h>
+    Module Name:
+
+        hid.c
+
+    Abstract:
+
+        Code for handling HID related requests
+
+    Environment:
+
+        Kernel mode
+
+    Revision History:
+
+--*/
+
+#include <Cross Platform Shim\compat.h>
 #include <internal.h>
 #include <controller.h>
 #include <rmi4\rmiinternal.h>
@@ -20,9 +38,7 @@ const UCHAR gReportDescriptor[] = {
     SYNAPTICS_RMI4_DIGITIZER_FINGER,
     SYNAPTICS_RMI4_DIGITIZER_REPORTMODE,
     SYNAPTICS_RMI4_DIGITIZER_KEYPAD,
-    SYNAPTICS_RMI4_DIGITIZER_STYLUS,
-    //SYNAPTICS_RMI4_DIGITIZER_RADIAL_CONTROLLER,
-    SYNAPTICS_RMI4_DIGITIZER_WAKE_BUTTON
+    SYNAPTICS_RMI4_DIGITIZER_STYLUS
 };
 const ULONG gdwcbReportDescriptor = sizeof(gReportDescriptor);
 
@@ -100,7 +116,7 @@ Return Value:
     //
     if (devContext->ServiceInterruptsAfterD0Entry == TRUE)
     {
-		DEV_REPORT ptpReport;
+		HID_INPUT_REPORT ptpReport;
         BOOLEAN servicingComplete = FALSE;
 
         while (servicingComplete == FALSE)

@@ -1,6 +1,7 @@
 /*++
-    Copyright (c) Microsoft Corporation. All Rights Reserved. 
-    Sample code. Dealpoint ID #843729.
+    Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
     Module Name:
 
@@ -18,25 +19,27 @@
 
 --*/
 
-#include <compat.h>
 #include <internal.h>
 #include <controller.h>
 #include <driver.h>
 #include <device.h>
 #include <hid.h>
 #include <queue.h>
+#include <selftest.h>
+#include <enoselftest.h>
+#include <driver.h>
 #include <driver.tmh>
 
 #ifdef ALLOC_PRAGMA
-  #pragma alloc_text(PAGE, OnDeviceAdd)
-  #pragma alloc_text(PAGE, OnContextCleanup)
+#pragma alloc_text(PAGE, OnDeviceAdd)
+#pragma alloc_text(PAGE, OnContextCleanup)
 #endif
 
 NTSTATUS
-DriverEntry (
+DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
-    )
+)
 /*++
 
 Routine Description:
@@ -73,16 +76,16 @@ Return Value:
 
     WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
     attributes.EvtCleanupCallback = OnContextCleanup;
-   
+
     status = WdfDriverCreate(
         DriverObject,
         RegistryPath,
         &attributes,
         &config,
         WDF_NO_HANDLE
-        );
+    );
 
-    if (!NT_SUCCESS(status)) 
+    if (!NT_SUCCESS(status))
     {
         Trace(
             TRACE_LEVEL_ERROR,
@@ -104,14 +107,14 @@ NTSTATUS
 OnDeviceAdd(
     IN WDFDRIVER Driver,
     IN PWDFDEVICE_INIT DeviceInit
-    )
+)
 /*++
 
 Routine Description:
 
     OnDeviceAdd is called by the framework in response to AddDevice
-    call from the PnP manager when a device is found. We create and 
-    initialize a WDF device object to represent the new instance of 
+    call from the PnP manager when a device is found. We create and
+    initialize a WDF device object to represent the new instance of
     an touch device. Per-device objects are also instantiated.
 
 Arguments:
@@ -128,14 +131,14 @@ Return Value:
     WDF_OBJECT_ATTRIBUTES attributes;
     PDEVICE_EXTENSION devContext;
     WDFDEVICE fxDevice;
-    WDF_INTERRUPT_CONFIG interruptConfig;  
+    WDF_INTERRUPT_CONFIG interruptConfig;
     WDF_PNPPOWER_EVENT_CALLBACKS pnpPowerCallbacks;
     WDF_IO_QUEUE_CONFIG queueConfig;
     NTSTATUS status;
-    
+
     UNREFERENCED_PARAMETER(Driver);
     PAGED_CODE();
-    
+
     //
     // Relinquish power policy ownership because HIDCLASS acts a power
     // policy owner for ther HID stack.
@@ -151,12 +154,12 @@ Return Value:
     WDF_PNPPOWER_EVENT_CALLBACKS_INIT(&pnpPowerCallbacks);
 
     pnpPowerCallbacks.EvtDeviceD0Entry = OnD0Entry;
-    pnpPowerCallbacks.EvtDeviceD0Exit  = OnD0Exit;
+    pnpPowerCallbacks.EvtDeviceD0Exit = OnD0Exit;
     pnpPowerCallbacks.EvtDevicePrepareHardware = OnPrepareHardware;
     pnpPowerCallbacks.EvtDeviceReleaseHardware = OnReleaseHardware;
 
     WdfDeviceInitSetPnpPowerEventCallbacks(DeviceInit, &pnpPowerCallbacks);
-    
+
     //
     // Create a framework device object. This call will in turn create
     // a WDM device object, attach to the lower stack, and set the
@@ -166,7 +169,7 @@ Return Value:
 
     status = WdfDeviceCreate(&DeviceInit, &attributes, &fxDevice);
 
-    if (!NT_SUCCESS(status)) 
+    if (!NT_SUCCESS(status))
     {
         Trace(
             TRACE_LEVEL_ERROR,
@@ -180,16 +183,15 @@ Return Value:
     devContext = GetDeviceContext(fxDevice);
     devContext->FxDevice = fxDevice;
     devContext->InputMode = MODE_MULTI_TOUCH;
-  
+
     //
     // Create a parallel dispatch queue to handle requests from HID Class
     //
     WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(
-        &queueConfig, 
+        &queueConfig,
         WdfIoQueueDispatchParallel);
 
     queueConfig.EvtIoInternalDeviceControl = OnInternalDeviceControl;
-	queueConfig.EvtIoDeviceControl = OnDeviceControl;
     queueConfig.PowerManaged = WdfFalse;
 
     status = WdfIoQueueCreate(
@@ -198,7 +200,7 @@ Return Value:
         WDF_NO_OBJECT_ATTRIBUTES,
         &devContext->DefaultQueue);
 
-    if (!NT_SUCCESS (status)) 
+    if (!NT_SUCCESS(status))
     {
         Trace(
             TRACE_LEVEL_ERROR,
@@ -224,7 +226,7 @@ Return Value:
         WDF_NO_OBJECT_ATTRIBUTES,
         &devContext->PingPongQueue);
 
-    if (!NT_SUCCESS(status)) 
+    if (!NT_SUCCESS(status))
     {
         Trace(
             TRACE_LEVEL_ERROR,
@@ -250,7 +252,7 @@ Return Value:
         &queueConfig,
         WDF_NO_OBJECT_ATTRIBUTES,
         &devContext->IdleQueue
-        );
+    );
 
     if (!NT_SUCCESS(status))
     {
@@ -289,6 +291,38 @@ Return Value:
         goto exit;
     }
 
+    //
+    // Initialize driver path for self-test
+    //
+    status = TchSelfTestInitialize(fxDevice);
+
+    if (!NT_SUCCESS(status))
+    {
+        Trace(
+            TRACE_LEVEL_ERROR,
+            TRACE_INIT,
+            "Error initializing self-test functionality - %!STATUS!",
+            status);
+
+        goto exit;
+    }
+
+    //
+    // Initialize driver path for self-test
+    //
+    status = TchEnoSelfTestInitialize(fxDevice);
+
+    if (!NT_SUCCESS(status))
+    {
+        Trace(
+            TRACE_LEVEL_ERROR,
+            TRACE_INIT,
+            "Error initializing Eno self-test functionality - %!STATUS!",
+            status);
+
+        goto exit;
+    }
+
 exit:
 
     return status;
@@ -315,7 +349,6 @@ Return Value:
 --*/
 {
     PAGED_CODE();
-    
-    WPP_CLEANUP(WdfDriverWdmGetDriverObject(Driver));    
+
+    WPP_CLEANUP(WdfDriverWdmGetDriverObject(Driver));
 }
-       

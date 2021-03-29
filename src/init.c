@@ -1,6 +1,7 @@
 /*++
-	Copyright (c) Microsoft Corporation. All Rights Reserved.
-	Sample code. Dealpoint ID #843729.
+    Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
 	Module Name:
 
@@ -18,7 +19,7 @@
 
 --*/
 
-#include <compat.h>
+#include <Cross Platform Shim\compat.h>
 #include <spb.h>
 #include <rmi4\f01\function01.h>
 #include <rmi4\rmiinternal.h>
@@ -209,6 +210,11 @@ Return Value:
 	// Get screen properties and populate context
 	//
 	TchGetScreenProperties(&context->Props);
+
+	//
+	// Get Touch settings and populate context
+	//
+	TchGetTouchSettings(&context->TouchSettings);
 
 	//
 	// Allocate a WDFWAITLOCK for guarding access to the

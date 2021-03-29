@@ -1,8 +1,8 @@
 /* BitOps Linux Port */
 #include <wdm.h>
 #include <wdf.h>
-#include <bitops.h>
-#include <hweight.h>
+#include <Cross Platform Shim\bitops.h>
+#include <Cross Platform Shim\hweight.h>
 
 void bitmap_set(unsigned long *map, unsigned int start, int len)
 {

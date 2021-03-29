@@ -90,6 +90,11 @@ typedef struct _DEVICE_EXTENSION
     //
     VOID *TouchContext;
 
+    //
+    // Settings
+    //
+    TOUCH_SCREEN_SETTINGS TouchSettings;
+
 	//
 	// PTP New
 	//

@@ -2,7 +2,7 @@
 // Copyright (c) Bingxing Wang. All Rights Reserved. 
 // Copyright (c) LumiaWOA authors. All Rights Reserved. 
 
-#include <compat.h>
+#include <Cross Platform Shim\compat.h>
 #include <controller.h>
 #include <HidCommon.h>
 #include <spb.h>
@@ -346,17 +346,6 @@ RmiGetReportingConfigurationF12(
 		goto exit;
 	}
 
-	if (ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize != sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Unexpected F12_2D_CTRL23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
 	//
 	// Read Device Control register
 	//
@@ -364,7 +353,7 @@ RmiGetReportingConfigurationF12(
 		SpbContext,
 		ControllerContext->Descriptors[index].ControlBase + indexCtrl23,
 		ControlRegisterData,
-		sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER)
+		min(ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize, sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER))
 	);
 
 	if (!NT_SUCCESS(status))
@@ -441,17 +430,6 @@ RmiSetReportingConfigurationF12(
 		goto exit;
 	}
 
-	if (ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize != sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER))
-	{
-		Trace(
-			TRACE_LEVEL_ERROR,
-			TRACE_INIT,
-			"Unexpected F12_2D_CTRL23 register size: %d", ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize);
-
-		status = STATUS_INVALID_DEVICE_STATE;
-		goto exit;
-	}
-
 	Trace(
 		TRACE_LEVEL_INFORMATION,
 		TRACE_INIT,
@@ -464,7 +442,7 @@ RmiSetReportingConfigurationF12(
 		SpbContext,
 		ControllerContext->Descriptors[index].ControlBase + indexCtrl23,
 		ControlRegisterData,
-		sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER)
+		min(ControllerContext->ControlRegDesc.Registers[indexCtrl23].RegisterSize, sizeof(RMI4_F12_OBJECT_REPORT_ENABLE_REGISTER))
 	);
 
 	if (!NT_SUCCESS(status))
@@ -521,7 +499,7 @@ RmiConfigureControlRegisterF12(
 			"Skipped configuring $12 Control Register F12_2D_CTRL%d as the driver does not support it.",
 			RegisterIndex);
 	}
-
+	
 	return status;
 }
 
@@ -1062,7 +1040,8 @@ RmiConfigureControlRegistersF12(
 					"Failed to configure $12 Control Register F12_2D_CTRL%d - 0x%08lX",
 					i,
 					status);
-				goto exit;
+				//goto exit;
+				status = STATUS_SUCCESS;
 			}
 		}
 	}
@@ -2003,7 +1982,7 @@ RmiConfigureF12(
 
 	++queryF12Addr;
 
-	if (!(buf & BIT(0)))
+	/*if (!(buf & BIT(0)))
 	{
 		Trace(
 			TRACE_LEVEL_ERROR,
@@ -2013,7 +1992,7 @@ RmiConfigureF12(
 
 		status = STATUS_INVALID_PARAMETER;
 		goto exit;
-	}
+	}*/
 
 	ControllerContext->HasDribble = !!(buf & BIT(3));
 

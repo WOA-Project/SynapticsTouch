@@ -1,6 +1,7 @@
 /*++
-    Copyright (c) Microsoft Corporation. All Rights Reserved. 
-    Sample code. Dealpoint ID #843729.
+    Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
     Module Name:
 
@@ -18,7 +19,7 @@
 
 --*/
 
-#include <compat.h>
+#include <Cross Platform Shim\compat.h>
 #include <controller.h>
 #include <spb.h>
 #include <rmi4\rmiinternal.h>
@@ -373,12 +374,6 @@ Return Value:
     controller->PenCache.PenSlotValid = 0;
     controller->PenCache.PenSlotDirty = 0;
     controller->PenCache.PenDownCount = 0;
-
-    controller->PucksReported = 0;
-    controller->PucksTotal = 0;
-    controller->PuckCache.PuckSlotValid = 0;
-    controller->PuckCache.PuckSlotDirty = 0;
-    controller->PuckCache.PuckDownCount = 0;
 
     WdfWaitLockRelease(controller->ControllerLock);
 

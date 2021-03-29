@@ -1,8 +1,9 @@
 /*++
-    Copyright (c) Microsoft Corporation. All Rights Reserved. 
-    Sample code. Dealpoint ID #843729.
+    Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
-    Module Name: 
+    Module Name:
 
         registry.c
 
@@ -20,9 +21,17 @@
 
 --*/
 
-#include <compat.h>
 #include <rmi4\rmiinternal.h>
 #include <registry.tmh>
+#include <internal.h>
+
+#define TOUCH_REG_KEY                    L"\\Registry\\Machine\\SYSTEM\\TOUCH"
+#define TOUCH_SCREEN_SETTINGS_SUB_KEY    L"Settings"
+#define TOUCH_SCREEN_SETTINGS_00_SUB_KEY L"Settings\\00"
+#define TOUCH_SCREEN_SETTINGS_01_SUB_KEY L"Settings\\01"
+#define TOUCH_SCREEN_SETTINGS_02_SUB_KEY L"Settings\\02"
+#define TOUCH_SCREEN_SETTINGS_03_SUB_KEY L"Settings\\03"
+#define TOUCH_SCREEN_SETTINGS_FF_SUB_KEY L"Settings\\FF"
 
 //
 // Default RMI4 configuration values can be changed here. Please refer to the
@@ -39,7 +48,7 @@ static RMI4_CONFIGURATION gDefaultConfiguration =
         1,                                              // No Sleep (do sleep)
         0,                                              // Report Rate (standard)
         1,                                              // Configured
-        0xff,                                           // Interrupt Enable
+        0xf,                                            // Interrupt Enable
         RMI4_MILLISECONDS_TO_TENTH_MILLISECONDS(20),    // Doze Interval
         10,                                             // Doze Threshold
         RMI4_SECONDS_TO_HALF_SECONDS(2)                 // Doze Holdoff
@@ -96,437 +105,1569 @@ static RMI4_CONFIGURATION gDefaultConfiguration =
     },
 };
 
+static TOUCH_SCREEN_SETTINGS gDefaultTouchSettings =
+{
+    0x1,
+    0x0,
+    0x1,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x3C,
+    0x32,
+    0x32,
+    0x32,
+    0x1,
+    0x0,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+    0x0,
+    0x0,
+    0x3FFF,
+    0x3FFF,
+    0x0,
+};
+
 RTL_QUERY_REGISTRY_TABLE gRegistryTable[] =
 {
-    //
-    // RMI4 F01 - Device control settings
-    //
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"SleepMode",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, DeviceSettings) + 
-            FIELD_OFFSET(RMI4_F01_CTRL_REGISTERS_LOGICAL, SleepMode)),
+        L"DeviceId",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, DeviceId)),
         REG_DWORD,
-        &gDefaultConfiguration.DeviceSettings.SleepMode,
+        &gDefaultTouchSettings.DeviceId,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"NoSleep",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, DeviceSettings) + 
-            FIELD_OFFSET(RMI4_F01_CTRL_REGISTERS_LOGICAL, NoSleep)),
+        L"UseControllerSleep",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, UseControllerSleep)),
         REG_DWORD,
-        &gDefaultConfiguration.DeviceSettings.NoSleep,
+        &gDefaultTouchSettings.UseControllerSleep,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"ReportRate",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, DeviceSettings) + 
-            FIELD_OFFSET(RMI4_F01_CTRL_REGISTERS_LOGICAL, ReportRate)),
+        L"UseNoSleepBit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, UseNoSleepBit)),
         REG_DWORD,
-        &gDefaultConfiguration.DeviceSettings.ReportRate,
+        &gDefaultTouchSettings.UseNoSleepBit,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"Configured",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, DeviceSettings) + 
-            FIELD_OFFSET(RMI4_F01_CTRL_REGISTERS_LOGICAL, Configured)),
+        L"ImprovedTouchSupported",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ImprovedTouchSupported)),
         REG_DWORD,
-        &gDefaultConfiguration.DeviceSettings.Configured,
+        &gDefaultTouchSettings.ImprovedTouchSupported,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"InterruptEnable",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, DeviceSettings) + 
-            FIELD_OFFSET(RMI4_F01_CTRL_REGISTERS_LOGICAL, InterruptEnable)),
+        L"WakeupGestureSupported",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, WakeupGestureSupported)),
         REG_DWORD,
-        &gDefaultConfiguration.DeviceSettings.InterruptEnable,
+        &gDefaultTouchSettings.WakeupGestureSupported,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"DozeInterval",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, DeviceSettings) + 
-            FIELD_OFFSET(RMI4_F01_CTRL_REGISTERS_LOGICAL, DozeInterval)),
+        L"ChargerDetectionSupported",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ChargerDetectionSupported)),
         REG_DWORD,
-        &gDefaultConfiguration.DeviceSettings.DozeInterval,
+        &gDefaultTouchSettings.ChargerDetectionSupported,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"DozeThreshold",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, DeviceSettings) + 
-            FIELD_OFFSET(RMI4_F01_CTRL_REGISTERS_LOGICAL, DozeThreshold)),
+        L"ActivePenSupported",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ActivePenSupported)),
         REG_DWORD,
-        &gDefaultConfiguration.DeviceSettings.DozeThreshold,
+        &gDefaultTouchSettings.ActivePenSupported,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"DozeHoldoff",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, DeviceSettings) + 
-            FIELD_OFFSET(RMI4_F01_CTRL_REGISTERS_LOGICAL, DozeHoldoff)),
+        L"ExtClockControlSupported",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ExtClockControlSupported)),
         REG_DWORD,
-        &gDefaultConfiguration.DeviceSettings.DozeHoldoff,
-        sizeof(UINT32)
-    },
-
-    //
-    // RMI4 F11 - 2D Touchpad sensor settings
-    //
-    {
-        NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"ReportingMode",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, ReportingMode)),
-        REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.ReportingMode,
+        &gDefaultTouchSettings.ExtClockControlSupported,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"AbsPosFilt",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, AbsPosFilt)),
+        L"ForceDriverSupported",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ForceDriverSupported)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.AbsPosFilt,
+        &gDefaultTouchSettings.ForceDriverSupported,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"RelPosFilt",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, RelPosFilt)),
+        L"DoubleTapMaxTapTime10ms",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, DoubleTapMaxTapTime10ms)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.RelPosFilt,
+        &gDefaultTouchSettings.DoubleTapMaxTapTime10ms,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"RelBallistics",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, RelBallistics)),
+        L"DoubleTapMaxTapDistance100um",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, DoubleTapMaxTapDistance100um)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.RelBallistics,
+        &gDefaultTouchSettings.DoubleTapMaxTapDistance100um,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"Dribble",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, Dribble)),
+        L"DoubleTapDeadZoneWidth100um",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, DoubleTapDeadZoneWidth100um)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.Dribble,
+        &gDefaultTouchSettings.DoubleTapDeadZoneWidth100um,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"PalmDetectThreshold",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, PalmDetectThreshold)),
+        L"DoubleTapDeadZoneHeight100um",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, DoubleTapDeadZoneHeight100um)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.PalmDetectThreshold,
+        &gDefaultTouchSettings.DoubleTapDeadZoneHeight100um,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"MotionSensitivity",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, MotionSensitivity)),
+        L"ControllerType",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ControllerType)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.MotionSensitivity,
+        &gDefaultTouchSettings.ControllerType,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"ManTrackEn",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, ManTrackEn)),
+        L"VendorCount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, VendorCount)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.ManTrackEn,
+        &gDefaultTouchSettings.VendorCount,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"ManTrackedFinger",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, ManTrackedFinger)),
+        L"ResetControllerInWakeUp",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ResetControllerInWakeUp)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.ManTrackedFinger,
+        &gDefaultTouchSettings.ResetControllerInWakeUp,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"DeltaXPosThreshold",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, DeltaXPosThreshold)),
+        L"Vendor00",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.DeltaXPosThreshold,
+        &gDefaultTouchSettings.Vendor00,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"DeltaYPosThreshold",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, DeltaYPosThreshold)),
+        L"Vendor01",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.DeltaYPosThreshold,
+        &gDefaultTouchSettings.Vendor01,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"Velocity",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, Velocity)),
+        L"Vendor02",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.Velocity,
+        &gDefaultTouchSettings.Vendor02,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"Acceleration",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, Acceleration)),
+        L"Vendor03",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.Acceleration,
+        &gDefaultTouchSettings.Vendor03,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"SensorMaxXPos",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, SensorMaxXPos)),
+        L"Revision00",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Revision00)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.SensorMaxXPos,
+        &gDefaultTouchSettings.Revision00,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"SensorMaxYPos",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, SensorMaxYPos)),
+        L"Revision01",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Revision01)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.SensorMaxYPos,
-        sizeof(UINT32)
-    },
-        {
-        NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"ZTouchThreshold",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, ZTouchThreshold)),
-        REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.ZTouchThreshold,
+        &gDefaultTouchSettings.Revision01,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"ZHysteresis",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, ZHysteresis)),
+        L"Revision02",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Revision02)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.ZHysteresis,
+        &gDefaultTouchSettings.Revision02,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"SmallZThreshold",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, SmallZThreshold)),
+        L"Revision03",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Revision03)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.SmallZThreshold,
+        &gDefaultTouchSettings.Revision03,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"SmallZScaleFactor",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, SmallZScaleFactor)),
+        L"ReprogramFw00",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ReprogramFw00)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.SmallZScaleFactor,
+        &gDefaultTouchSettings.ReprogramFw00,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"LargeZScaleFactor",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, LargeZScaleFactor)),
+        L"ReprogramFw01",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ReprogramFw01)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.LargeZScaleFactor,
+        &gDefaultTouchSettings.ReprogramFw01,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"AlgorithmSelection",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, AlgorithmSelection)),
+        L"ReprogramFw02",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ReprogramFw02)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.AlgorithmSelection,
+        &gDefaultTouchSettings.ReprogramFw02,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"WxScaleFactor",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, WxScaleFactor)),
+        L"ReprogramFw03",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ReprogramFw03)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.WxScaleFactor,
+        &gDefaultTouchSettings.ReprogramFw03,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"WxOffset",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, WxOffset)),
+        L"ForceFlash",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, ForceFlash)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.WxOffset,
+        &gDefaultTouchSettings.ForceFlash,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"WyScaleFactor",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, WyScaleFactor)),
+        L"Vendor00ProductId0",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId0)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.WyScaleFactor,
+        &gDefaultTouchSettings.Vendor00ProductId0,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"WyOffset",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, WyOffset)),
+        L"Vendor00ProductId1",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId1)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.WyOffset,
+        &gDefaultTouchSettings.Vendor00ProductId1,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"XPitch",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, XPitch)),
+        L"Vendor00ProductId2",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId2)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.XPitch,
+        &gDefaultTouchSettings.Vendor00ProductId2,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"YPitch",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, YPitch)),
+        L"Vendor00ProductId3",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId3)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.YPitch,
+        &gDefaultTouchSettings.Vendor00ProductId3,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"FingerWidthX",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, FingerWidthX)),
+        L"Vendor00ProductId4",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId4)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.FingerWidthX,
+        &gDefaultTouchSettings.Vendor00ProductId4,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"FingerWidthY",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, FingerWidthY)),
+        L"Vendor00ProductId5",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId5)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.FingerWidthY,
+        &gDefaultTouchSettings.Vendor00ProductId5,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"ReportMeasuredSize",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, ReportMeasuredSize)),
+        L"Vendor00ProductId6",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId6)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.ReportMeasuredSize,
+        &gDefaultTouchSettings.Vendor00ProductId6,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"SegmentationSensitivity",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, SegmentationSensitivity)),
+        L"Vendor00ProductId7",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId7)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.SegmentationSensitivity,
+        &gDefaultTouchSettings.Vendor00ProductId7,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"XClipLo",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, XClipLo)),
+        L"Vendor00ProductId8",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId8)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.XClipLo,
+        &gDefaultTouchSettings.Vendor00ProductId8,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"XClipHi",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, XClipHi)),
+        L"Vendor00ProductId9",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00ProductId9)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.XClipHi,
+        &gDefaultTouchSettings.Vendor00ProductId9,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"YClipLo",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, YClipLo)),
+        L"Vendor01ProductId0",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId0)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.YClipLo,
+        &gDefaultTouchSettings.Vendor01ProductId0,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"YClipHi",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, YClipHi)),
+        L"Vendor01ProductId1",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId1)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.YClipHi,
+        &gDefaultTouchSettings.Vendor01ProductId1,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"MinFingerSeparation",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, MinFingerSeparation)),
+        L"Vendor01ProductId2",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId2)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.MinFingerSeparation,
+        &gDefaultTouchSettings.Vendor01ProductId2,
         sizeof(UINT32)
     },
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"MaxFingerMovement",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, TouchSettings) + 
-            FIELD_OFFSET(RMI4_F11_CTRL_REGISTERS_LOGICAL, MaxFingerMovement)),
+        L"Vendor01ProductId3",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId3)),
         REG_DWORD,
-        &gDefaultConfiguration.TouchSettings.MaxFingerMovement,
+        &gDefaultTouchSettings.Vendor01ProductId3,
         sizeof(UINT32)
     },
-
-    //
-    // Add new supported functions here
-    //
-
-    //
-    // Internal driver settings
-    //
     {
         NULL, RTL_QUERY_REGISTRY_DIRECT,
-        L"PepRemovesVoltageInD3",
-        (PVOID) (FIELD_OFFSET(RMI4_CONFIGURATION, PepRemovesVoltageInD3)),
+        L"Vendor01ProductId4",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId4)),
         REG_DWORD,
-        &gDefaultConfiguration.PepRemovesVoltageInD3,
+        &gDefaultTouchSettings.Vendor01ProductId4,
         sizeof(UINT32)
     },
-
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01ProductId5",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId5)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01ProductId5,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01ProductId6",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId6)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01ProductId6,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01ProductId7",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId7)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01ProductId7,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01ProductId8",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId8)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01ProductId8,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01ProductId9",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01ProductId9)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01ProductId9,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId0",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId0)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId0,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId1",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId1)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId1,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId2",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId2)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId2,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId3",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId3)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId3,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId4",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId4)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId4,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId5",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId5)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId5,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId6",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId6)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId6,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId7",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId7)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId7,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId8",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId8)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId8,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02ProductId9",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02ProductId9)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02ProductId9,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId0",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId0)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId0,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId1",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId1)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId1,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId2",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId2)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId2,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId3",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId3)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId3,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId4",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId4)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId4,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId5",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId5)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId5,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId6",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId6)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId6,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId7",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId7)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId7,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId8",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId8)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId8,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03ProductId9",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03ProductId9)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03ProductId9,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00IncludeHighResTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00IncludeHighResTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00IncludeHighResTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00HighResMaxRxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00HighResMaxRxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00HighResMaxRxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00HighResMaxTxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00HighResMaxTxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00HighResMaxTxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00HighResMinImageLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00HighResMinImageLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00HighResMinImageLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00IncludeBaselineMinMaxTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00IncludeBaselineMinMaxTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00IncludeBaselineMinMaxTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00BaselineMinMaxMinPixelLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00BaselineMinMaxMinPixelLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00BaselineMinMaxMinPixelLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00BaselineMinMaxMaxPixelLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00BaselineMinMaxMaxPixelLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00BaselineMinMaxMaxPixelLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00IncludeFullBaselineTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00IncludeFullBaselineTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00IncludeFullBaselineTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00RxAmount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00RxAmount)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00RxAmount,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00TxAmount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00TxAmount)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00TxAmount,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00RxElectrodeMaskTouch2D",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00RxElectrodeMaskTouch2D)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00RxElectrodeMaskTouch2D,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00TxElectrodeMaskTouch2D",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00TxElectrodeMaskTouch2D)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00TxElectrodeMaskTouch2D,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00RxElectrodeMaskButtons",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00RxElectrodeMaskButtons)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00RxElectrodeMaskButtons,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00TxElectrodeMaskButtons",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00TxElectrodeMaskButtons)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00TxElectrodeMaskButtons,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00FullBaselineButton0Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00FullBaselineButton0Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00FullBaselineButton0Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00FullBaselineButton1Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00FullBaselineButton1Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00FullBaselineButton1Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00FullBaselineButton2Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00FullBaselineButton2Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00FullBaselineButton2Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00FullBaselineButton0Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00FullBaselineButton0Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00FullBaselineButton0Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00FullBaselineButton1Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00FullBaselineButton1Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00FullBaselineButton1Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00FullBaselineButton2Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00FullBaselineButton2Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00FullBaselineButton2Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00IncludeAbsSenseRawCapTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00IncludeAbsSenseRawCapTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00IncludeAbsSenseRawCapTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00AbsSenseRawCapTxRxStart",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00AbsSenseRawCapTxRxStart)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00AbsSenseRawCapTxRxStart,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00AbsSenseRawCapTxRxEnd",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00AbsSenseRawCapTxRxEnd)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00AbsSenseRawCapTxRxEnd,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00AbsSenseRawCapMinLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00AbsSenseRawCapMinLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00AbsSenseRawCapMinLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00AbsSenseRawCapMaxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00AbsSenseRawCapMaxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00AbsSenseRawCapMaxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor00IncludeShortTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor00IncludeShortTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor00IncludeShortTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01IncludeHighResTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01IncludeHighResTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01IncludeHighResTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01HighResMaxRxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01HighResMaxRxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01HighResMaxRxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01HighResMaxTxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01HighResMaxTxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01HighResMaxTxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01HighResMinImageLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01HighResMinImageLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01HighResMinImageLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01IncludeBaselineMinMaxTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01IncludeBaselineMinMaxTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01IncludeBaselineMinMaxTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01BaselineMinMaxMinPixelLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01BaselineMinMaxMinPixelLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01BaselineMinMaxMinPixelLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01BaselineMinMaxMaxPixelLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01BaselineMinMaxMaxPixelLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01BaselineMinMaxMaxPixelLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01IncludeFullBaselineTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01IncludeFullBaselineTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01IncludeFullBaselineTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01RxAmount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01RxAmount)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01RxAmount,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01TxAmount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01TxAmount)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01TxAmount,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01RxElectrodeMaskTouch2D",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01RxElectrodeMaskTouch2D)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01RxElectrodeMaskTouch2D,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01TxElectrodeMaskTouch2D",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01TxElectrodeMaskTouch2D)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01TxElectrodeMaskTouch2D,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01RxElectrodeMaskButtons",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01RxElectrodeMaskButtons)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01RxElectrodeMaskButtons,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01TxElectrodeMaskButtons",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01TxElectrodeMaskButtons)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01TxElectrodeMaskButtons,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01FullBaselineButton0Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01FullBaselineButton0Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01FullBaselineButton0Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01FullBaselineButton1Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01FullBaselineButton1Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01FullBaselineButton1Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01FullBaselineButton2Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01FullBaselineButton2Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01FullBaselineButton2Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01FullBaselineButton0Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01FullBaselineButton0Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01FullBaselineButton0Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01FullBaselineButton1Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01FullBaselineButton1Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01FullBaselineButton1Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01FullBaselineButton2Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01FullBaselineButton2Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01FullBaselineButton2Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01IncludeAbsSenseRawCapTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01IncludeAbsSenseRawCapTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01IncludeAbsSenseRawCapTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01AbsSenseRawCapTxRxStart",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01AbsSenseRawCapTxRxStart)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01AbsSenseRawCapTxRxStart,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01AbsSenseRawCapTxRxEnd",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01AbsSenseRawCapTxRxEnd)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01AbsSenseRawCapTxRxEnd,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01AbsSenseRawCapMinLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01AbsSenseRawCapMinLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01AbsSenseRawCapMinLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01AbsSenseRawCapMaxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01AbsSenseRawCapMaxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01AbsSenseRawCapMaxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor01IncludeShortTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor01IncludeShortTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor01IncludeShortTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02IncludeHighResTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02IncludeHighResTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02IncludeHighResTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02HighResMaxRxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02HighResMaxRxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02HighResMaxRxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02HighResMaxTxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02HighResMaxTxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02HighResMaxTxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02HighResMinImageLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02HighResMinImageLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02HighResMinImageLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02IncludeBaselineMinMaxTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02IncludeBaselineMinMaxTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02IncludeBaselineMinMaxTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02BaselineMinMaxMinPixelLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02BaselineMinMaxMinPixelLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02BaselineMinMaxMinPixelLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02BaselineMinMaxMaxPixelLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02BaselineMinMaxMaxPixelLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02BaselineMinMaxMaxPixelLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02IncludeFullBaselineTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02IncludeFullBaselineTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02IncludeFullBaselineTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02RxAmount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02RxAmount)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02RxAmount,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02TxAmount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02TxAmount)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02TxAmount,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02RxElectrodeMaskTouch2D",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02RxElectrodeMaskTouch2D)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02RxElectrodeMaskTouch2D,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02TxElectrodeMaskTouch2D",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02TxElectrodeMaskTouch2D)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02TxElectrodeMaskTouch2D,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02RxElectrodeMaskButtons",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02RxElectrodeMaskButtons)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02RxElectrodeMaskButtons,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02TxElectrodeMaskButtons",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02TxElectrodeMaskButtons)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02TxElectrodeMaskButtons,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02FullBaselineButton0Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02FullBaselineButton0Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02FullBaselineButton0Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02FullBaselineButton1Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02FullBaselineButton1Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02FullBaselineButton1Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02FullBaselineButton2Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02FullBaselineButton2Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02FullBaselineButton2Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02FullBaselineButton0Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02FullBaselineButton0Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02FullBaselineButton0Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02FullBaselineButton1Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02FullBaselineButton1Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02FullBaselineButton1Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02FullBaselineButton2Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02FullBaselineButton2Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02FullBaselineButton2Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02IncludeAbsSenseRawCapTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02IncludeAbsSenseRawCapTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02IncludeAbsSenseRawCapTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02AbsSenseRawCapTxRxStart",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02AbsSenseRawCapTxRxStart)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02AbsSenseRawCapTxRxStart,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02AbsSenseRawCapTxRxEnd",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02AbsSenseRawCapTxRxEnd)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02AbsSenseRawCapTxRxEnd,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02AbsSenseRawCapMinLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02AbsSenseRawCapMinLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02AbsSenseRawCapMinLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02AbsSenseRawCapMaxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02AbsSenseRawCapMaxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02AbsSenseRawCapMaxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor02IncludeShortTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor02IncludeShortTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor02IncludeShortTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03IncludeHighResTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03IncludeHighResTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03IncludeHighResTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03HighResMaxRxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03HighResMaxRxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03HighResMaxRxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03HighResMaxTxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03HighResMaxTxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03HighResMaxTxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03HighResMinImageLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03HighResMinImageLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03HighResMinImageLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03IncludeBaselineMinMaxTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03IncludeBaselineMinMaxTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03IncludeBaselineMinMaxTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03BaselineMinMaxMinPixelLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03BaselineMinMaxMinPixelLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03BaselineMinMaxMinPixelLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03BaselineMinMaxMaxPixelLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03BaselineMinMaxMaxPixelLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03BaselineMinMaxMaxPixelLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03IncludeFullBaselineTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03IncludeFullBaselineTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03IncludeFullBaselineTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03RxAmount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03RxAmount)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03RxAmount,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03TxAmount",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03TxAmount)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03TxAmount,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03RxElectrodeMaskTouch2D",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03RxElectrodeMaskTouch2D)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03RxElectrodeMaskTouch2D,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03TxElectrodeMaskTouch2D",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03TxElectrodeMaskTouch2D)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03TxElectrodeMaskTouch2D,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03RxElectrodeMaskButtons",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03RxElectrodeMaskButtons)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03RxElectrodeMaskButtons,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03TxElectrodeMaskButtons",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03TxElectrodeMaskButtons)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03TxElectrodeMaskButtons,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03FullBaselineButton0Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03FullBaselineButton0Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03FullBaselineButton0Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03FullBaselineButton1Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03FullBaselineButton1Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03FullBaselineButton1Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03FullBaselineButton2Min",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03FullBaselineButton2Min)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03FullBaselineButton2Min,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03FullBaselineButton0Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03FullBaselineButton0Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03FullBaselineButton0Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03FullBaselineButton1Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03FullBaselineButton1Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03FullBaselineButton1Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03FullBaselineButton2Max",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03FullBaselineButton2Max)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03FullBaselineButton2Max,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03IncludeAbsSenseRawCapTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03IncludeAbsSenseRawCapTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03IncludeAbsSenseRawCapTest,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03AbsSenseRawCapTxRxStart",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03AbsSenseRawCapTxRxStart)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03AbsSenseRawCapTxRxStart,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03AbsSenseRawCapTxRxEnd",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03AbsSenseRawCapTxRxEnd)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03AbsSenseRawCapTxRxEnd,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03AbsSenseRawCapMinLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03AbsSenseRawCapMinLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03AbsSenseRawCapMinLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03AbsSenseRawCapMaxLimit",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03AbsSenseRawCapMaxLimit)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03AbsSenseRawCapMaxLimit,
+        sizeof(UINT32)
+    },
+    {
+        NULL, RTL_QUERY_REGISTRY_DIRECT,
+        L"Vendor03IncludeShortTest",
+        (PVOID)(FIELD_OFFSET(TOUCH_SCREEN_SETTINGS, Vendor03IncludeShortTest)),
+        REG_DWORD,
+        &gDefaultTouchSettings.Vendor03IncludeShortTest,
+        sizeof(UINT32)
+    },
     //
     // List Terminator
     //
@@ -540,15 +1681,15 @@ RTL_QUERY_REGISTRY_TABLE gRegistryTable[] =
     }
 };
 static const ULONG gcbRegistryTable = sizeof(gRegistryTable);
-static const ULONG gcRegistryTable = 
-    sizeof(gRegistryTable) / sizeof(gRegistryTable[0]);
+static const ULONG gcRegistryTable =
+sizeof(gRegistryTable) / sizeof(gRegistryTable[0]);
 
 NTSTATUS
 RtlReadRegistryValue(
-    PCWSTR registry_path, 
-    PCWSTR value_name, 
-    ULONG type, 
-    PVOID data, 
+    PCWSTR registry_path,
+    PCWSTR value_name,
+    ULONG type,
+    PVOID data,
     ULONG length
 )
 {
@@ -592,9 +1733,9 @@ NTSTATUS
 TchRegistryGetControllerSettings(
     IN VOID* ControllerContext,
     IN WDFDEVICE FxDevice
-    )
+)
 /*++
- 
+
   Routine Description:
 
     This routine retrieves controller wide settings
@@ -612,86 +1753,91 @@ TchRegistryGetControllerSettings(
 --*/
 {
     RMI4_CONTROLLER_CONTEXT* controller;
-    HANDLE hKey;
-    ULONG i;
-    WDFKEY key;
-    PRTL_QUERY_REGISTRY_TABLE regTable;
     NTSTATUS status;
-    WDFKEY subkey;
-    DECLARE_CONST_UNICODE_STRING(subkeyName, L"Settings");
 
-    controller = (RMI4_CONTROLLER_CONTEXT*) ControllerContext;
+    UNREFERENCED_PARAMETER(FxDevice);
 
-    hKey = NULL;
-    key = NULL;
+    controller = (RMI4_CONTROLLER_CONTEXT*)ControllerContext;
+
+    RtlCopyMemory(
+        &controller->Config,
+        &gDefaultConfiguration,
+        sizeof(RMI4_CONFIGURATION));
+
+    status = STATUS_SUCCESS;
+
+    return status;
+}
+
+/*
+ * Appends src to string dst of size siz (unlike strncat, siz is the
+ * full size of dst, not space left).  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz = siz, truncation occurred.
+ * 
+ * From: https://stackoverflow.com/questions/1855956/how-do-you-concatenate-two-wchar-t-together
+ */
+size_t wstrlcat(wchar_t* dst, const wchar_t* src, size_t siz)
+{
+    wchar_t* d = dst;
+    const wchar_t* s = src;
+    size_t n = siz;
+    size_t dlen;
+
+    /* Find the end of dst and adjust bytes left but don't go past end */
+    while (n-- != 0 && *d != L'\0') {
+        d++;
+    }
+
+    dlen = d - dst;
+    n = siz - dlen;
+
+    if (n == 0) {
+        return(dlen + wcslen(s));
+    }
+
+    while (*s != L'\0')
+    {
+        if (n != 1)
+        {
+            *d++ = *s;
+            n--;
+        }
+        s++;
+    }
+
+    *d = '\0';
+    return(dlen + (s - src));        /* count does not include NUL */
+}
+
+VOID
+TchGetTouchSettings(
+    IN PTOUCH_SCREEN_SETTINGS TouchSettings
+)
+{
+    ULONG i;
+    PRTL_QUERY_REGISTRY_TABLE regTable;
+    WCHAR regKey[120] = { 0 };
+    NTSTATUS status;
+
     regTable = NULL;
-    subkey = NULL;
+
+    wstrlcat(regKey, TOUCH_REG_KEY, sizeof(TOUCH_REG_KEY));
+    regKey[sizeof(TOUCH_REG_KEY) / sizeof(WCHAR)] = L'\\';
+    RtlCopyMemory((PCHAR)regKey + sizeof(TOUCH_REG_KEY) + sizeof(WCHAR), TOUCH_SCREEN_SETTINGS_SUB_KEY, sizeof(TOUCH_SCREEN_SETTINGS_SUB_KEY) - sizeof(WCHAR));
+    regKey[(sizeof(TOUCH_REG_KEY) + sizeof(TOUCH_SCREEN_SETTINGS_SUB_KEY)) / sizeof(WCHAR)] = L'\0';
 
     //
-    // Obtain a WDM hkey for RtlQueryRegistryValues
+    // Table passed to RtlQueryRegistryValues must be allocated 
+    // from NonPagedPool
     //
-
-    status = WdfDeviceOpenRegistryKey(
-        FxDevice,
-        PLUGPLAY_REGKEY_DEVICE,
-        KEY_READ,
-        WDF_NO_OBJECT_ATTRIBUTES,
-        &key);
-  
-    if (!NT_SUCCESS(status))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_REGISTRY,
-            "Error opening device registry key - 0x%08lX",
-            status);
-
-        goto exit;
-    }
-
-    status = WdfRegistryOpenKey(
-        key,
-        &subkeyName,
-        KEY_READ,
-        WDF_NO_OBJECT_ATTRIBUTES,
-        &subkey);
-
-    if (!NT_SUCCESS(status))
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_REGISTRY,
-            "Error opening device registry subkey - 0x%08lX",
-            status);
-
-        goto exit;
-    }
-
-    hKey = WdfRegistryWdmGetHandle(subkey);
-
-    if (NULL == hKey)
-    {
-        Trace(
-            TRACE_LEVEL_ERROR,
-            TRACE_REGISTRY,
-            "Error getting WDM handle to WDF subkey");
-
-        goto exit;
-    }
-    
-    //
-    // RtlQueryRegistryValues table must be allocated from NonPagedPoolNx
-    //
-
     regTable = ExAllocatePoolWithTag(
-        NonPagedPoolNx,
+        NonPagedPool,
         gcbRegistryTable,
         TOUCH_POOL_TAG);
 
     if (regTable == NULL)
     {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto exit;
+        return;
     }
 
     RtlCopyMemory(
@@ -702,21 +1848,27 @@ TchRegistryGetControllerSettings(
     //
     // Update offset values with base pointer
     // 
-
-    for (i=0; i < gcRegistryTable-1; i++)
+    for (i = 0; i < gcRegistryTable - 1; i++)
     {
-        regTable[i].EntryContext = (PVOID) (
-            ((SIZE_T) regTable[i].EntryContext) +
-            ((ULONG_PTR) &controller->Config));
+        regTable[i].EntryContext = (PVOID)(
+            ((SIZE_T)regTable[i].EntryContext) +
+            ((ULONG_PTR)TouchSettings));
     }
 
     //
-    // Populate device context with registry or default configurations
+    // Start with default values
     //
+    RtlCopyMemory(
+        TouchSettings,
+        &gDefaultTouchSettings,
+        sizeof(TOUCH_SCREEN_SETTINGS));
 
+    //
+    // Populate device context with registry overrides (or defaults)
+    //
     status = RtlQueryRegistryValues(
-        RTL_REGISTRY_HANDLE,
-        (PCWSTR) hKey,
+        RTL_REGISTRY_ABSOLUTE,
+        regKey,
         regTable,
         NULL,
         NULL);
@@ -724,50 +1876,14 @@ TchRegistryGetControllerSettings(
     if (!NT_SUCCESS(status))
     {
         Trace(
-            TRACE_LEVEL_ERROR,
+            TRACE_LEVEL_WARNING,
             TRACE_REGISTRY,
             "Error retrieving registry configuration - 0x%08lX",
             status);
-
-        goto exit;
-    }
-
-exit:
-
-    if (!NT_SUCCESS(status))
-    {
-        //
-        // Revert to default configuration values if there was an
-        // issue reading configuration data from the registry
-        //
-        RtlCopyMemory(
-            &controller->Config,
-            &gDefaultConfiguration,
-            sizeof(RMI4_CONFIGURATION));
-
-        Trace(
-            TRACE_LEVEL_WARNING,
-            TRACE_REGISTRY,
-            "Error reading registry config, using defaults! - 0x%08lX",
-            status);
-
-        status = STATUS_SUCCESS;
-    }
-
-    if (subkey != NULL)
-    {
-        WdfRegistryClose(subkey);
-    }
-
-    if (key != NULL)
-    {
-        WdfRegistryClose(key);
     }
 
     if (regTable != NULL)
     {
         ExFreePoolWithTag(regTable, TOUCH_POOL_TAG);
     }
-
-    return status;
 }

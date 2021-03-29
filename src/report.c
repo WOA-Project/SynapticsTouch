@@ -1,7 +1,25 @@
-// Copyright (c) Microsoft Corporation. All Rights Reserved. 
-// Copyright (c) Bingxing Wang. All Rights Reserved. 
+/*++
+    Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
-#include <compat.h>
+	Module Name:
+
+		report.c
+
+	Abstract:
+
+		Contains Synaptics specific code for reporting samples
+
+	Environment:
+
+		Kernel mode
+
+	Revision History:
+
+--*/
+
+#include <Cross Platform Shim\compat.h>
 #include <controller.h>
 #include <hid.h>
 #include <HidCommon.h>
@@ -9,6 +27,7 @@
 #include <rmi4\rmiinternal.h>
 #include <rmi4\f01\function01.h>
 #include <rmi4\f12\function12.h>
+#include <rmi4\f1a\function1a.h>
 #include <report.tmh>
 
 const USHORT gOEMVendorID = 0x7379;    // "sy"
@@ -19,316 +38,6 @@ const PWSTR gpwstrManufacturerID = L"Synaptics";
 const PWSTR gpwstrProductID = L"3708";
 const PWSTR gpwstrSerialNumber = L"4";
 
-
-VOID
-RmiUpdateLocalPuckCache(
-	IN RMI4_DETECTED_OBJECTS* Data,
-	IN RMI4_PUCK_CACHE* Cache
-)
-/*++
-
-Routine Description:
-
-	This routine takes raw data reported by the Synaptics hardware and
-	parses it to update a local cache of finger states. This routine manages
-	removing lifted touches from the cache, and manages a map between the
-	order of reported touches in hardware, and the order the driver should
-	use in reporting.
-
-Arguments:
-
-	Data - A pointer to the new data returned from hardware
-	Cache - A data structure holding various current finger state info
-
-Return Value:
-
-	None.
-
---*/
-{
-	int i, j;
-
-	//
-	// When hardware was last read, if any slots reported as lifted, we
-	// must clean out the slot and old touch info. There may be new
-	// finger data using the slot.
-	//
-	for (i = 0; i < RMI4_MAX_TOUCHES; i++)
-	{
-		//
-		// Sweep for a slot that needs to be cleaned
-		//
-		if (!(Cache->PuckSlotDirty & (1 << i)))
-		{
-			continue;
-		}
-
-		NT_ASSERT(Cache->PuckDownCount > 0);
-
-		//
-		// Find the slot in the reporting list 
-		//
-		for (j = 0; j < RMI4_MAX_TOUCHES; j++)
-		{
-			if (Cache->PuckDownOrder[j] == i)
-			{
-				break;
-			}
-		}
-
-		NT_ASSERT(j != RMI4_MAX_TOUCHES);
-
-		//
-		// Remove the slot. If the finger lifted was the last in the list,
-		// we just decrement the list total by one. If it was not last, we
-		// shift the trailing list items up by one.
-		//
-		for (; (j < Cache->PuckDownCount - 1) && (j < RMI4_MAX_TOUCHES - 1); j++)
-		{
-			Cache->PuckDownOrder[j] = Cache->PuckDownOrder[j + 1];
-		}
-		Cache->PuckDownCount--;
-
-		//
-		// Finished, clobber the dirty bit
-		//
-		Cache->PuckSlotDirty &= ~(1 << i);
-	}
-
-	//
-	// Cache the new set of finger data reported by hardware
-	//
-	for (i = 0; i < RMI4_MAX_TOUCHES; i++)
-	{
-		//
-		// Take actions when a new contact is first reported as down
-		//
-		if ((Data->PuckStates[i] != RMI4_PUCK_STATE_NOT_PRESENT) &&
-			((Cache->PuckSlotValid & (1 << i)) == 0) &&
-			(Cache->PuckDownCount < RMI4_MAX_TOUCHES))
-		{
-			Cache->PuckSlotValid |= (1 << i);
-			Cache->PuckDownOrder[Cache->PuckDownCount++] = i;
-		}
-
-		//
-		// Ignore slots with no new information
-		//
-		if (!(Cache->PuckSlotValid & (1 << i)))
-		{
-			continue;
-		}
-
-		//
-		// When finger is down, update local cache with new information from
-		// the controller. When finger is up, we'll use last cached value
-		//
-		Cache->PuckSlot[i].fingerStatus = (UCHAR)Data->PuckStates[i];
-		if (Cache->PuckSlot[i].fingerStatus)
-		{
-			Cache->PuckSlot[i].x = Data->Positions[i].X;
-			Cache->PuckSlot[i].y = Data->Positions[i].Y;
-		}
-
-		//
-		// If a finger lifted, note the slot is now inactive so that any
-		// cached data is cleaned out before we read hardware again.
-		//
-		if (Cache->PuckSlot[i].fingerStatus == RMI4_PUCK_STATE_NOT_PRESENT)
-		{
-			Cache->PuckSlotDirty |= (1 << i);
-			Cache->PuckSlotValid &= ~(1 << i);
-		}
-	}
-
-	//
-	// Get current scan time (in 100us units)
-	//
-	ULONG64 QpcTimeStamp;
-	Cache->ScanTime = KeQueryInterruptTimePrecise(&QpcTimeStamp) / 1000;
-}
-
-VOID
-RmiFillNextPuckHidReportFromCache(
-	IN PPTP_DEVICE_PUCK_REPORT HidReport,
-	IN RMI4_PUCK_CACHE* Cache,
-	IN PTOUCH_SCREEN_PROPERTIES Props,
-	IN int* PucksReported,
-	IN int PucksTotal
-)
-/*++
-
-Routine Description:
-
-	This routine fills a HID report with the next touch entries in
-	the local device finger cache.
-
-	The routine also adjusts X/Y coordinates to match the desired display
-	coordinates.
-
-Arguments:
-
-	HidReport - pointer to the HID report structure to fill
-	Cache - pointer to the local device finger cache
-	Props - information on how to adjust X/Y coordinates to match the display
-	TouchesReported - On entry, the number of touches (against total) that
-		have already been reported. As touches are transferred from the local
-		device cache to a HID report, this number is incremented.
-	TouchesTotal - total number of touches in the touch cache
-
-Return Value:
-
-	None.
-
---*/
-{
-	int currentFingerIndex;
-	int fingersToReport = min(PucksTotal - *PucksReported, 1);
-	USHORT SctatchX = 0, ScratchY = 0;
-
-	HidReport->ReportID = REPORTID_RADIALCONTROLLER;
-
-	//
-	// There are only 16-bits for ScanTime, truncate it
-	//
-	//HidReport->ScanTime = Cache->ScanTime & 0xFFFF;
-
-	//
-	// Only five fingers supported yet
-	//
-	for (currentFingerIndex = 0; currentFingerIndex < fingersToReport; currentFingerIndex++)
-	{
-		int currentlyReporting = Cache->PuckDownOrder[*PucksReported];
-
-		SctatchX = (USHORT)Cache->PuckSlot[currentlyReporting].x;
-		ScratchY = (USHORT)Cache->PuckSlot[currentlyReporting].y;
-
-		//
-		// Perform per-platform x/y adjustments to controller coordinates
-		//
-		TchTranslateToDisplayCoordinates(
-			&SctatchX,
-			&ScratchY,
-			Props);
-
-		HidReport->Contacts[0].wX = 720;
-		HidReport->Contacts[0].wY = 720;
-
-		if (Cache->PuckSlot[currentlyReporting].fingerStatus)
-		{
-			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "Puck down\n");
-			HidReport->Contacts[0].Button = 1;
-			HidReport->Contacts[0].X = SctatchX;
-			HidReport->Contacts[0].Y = ScratchY;
-		}
-		else
-		{
-			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "Puck up\n");
-		}
-
-		(*PucksReported)++;
-	}
-}
-
-NTSTATUS
-RmiServicePuckDataInterrupt(
-	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-	IN RMI4_DETECTED_OBJECTS data,
-	IN PPTP_DEVICE_PUCK_REPORT HidReport,
-	IN UCHAR InputMode,
-	OUT BOOLEAN* PuckdingPucks
-)
-/*++
-
-Routine Description:
-
-	Called when a touch interrupt needs service.
-
-Arguments:
-
-	ControllerContext - Touch controller context
-	SpbContext - A pointer to the current SPB context (I2C, etc)
-	HidReport- Buffer to fill with a hid report if touch data is available
-	InputMode - Specifies mouse, single-touch, or multi-touch reporting modes
-	PuckdingTouches - Notifies caller if there are more touches to report, to
-		complete reporting the full state of fingers on the screen
-
-Return Value:
-
-	NTSTATUS indicating whether or not the current hid report buffer was filled
-
-	PuckdingTouches also indicates whether the caller should expect more than
-		one request to be completed to indicate the full state of fingers on
-		the screen
---*/
-{
-	NTSTATUS status;
-
-	UNREFERENCED_PARAMETER(InputMode);
-
-	status = STATUS_SUCCESS;
-	NT_ASSERT(PuckdingPucks != NULL);
-	*PuckdingPucks = FALSE;
-
-	//
-	// If no touches are unreported in our cache, read the next set of touches
-	// from hardware.
-	//
-	if (ControllerContext->PucksReported == ControllerContext->PucksTotal)
-	{
-		//
-		// Process the new touch data by updating our cached state
-		//
-		//
-		RmiUpdateLocalPuckCache(
-			&data,
-			&ControllerContext->PuckCache);
-
-		//
-		// Prepare to report touches via HID reports
-		//
-		ControllerContext->PucksReported = 0;
-		ControllerContext->PucksTotal =
-			ControllerContext->PuckCache.PuckDownCount;
-
-		//
-		// If no touches are present return that no data needed to be reported
-		//
-		if (ControllerContext->PucksTotal == 0)
-		{
-			status = STATUS_NO_DATA_DETECTED;
-			goto exit;
-		}
-	}
-
-	RtlZeroMemory(HidReport, sizeof(PTP_DEVICE_PUCK_REPORT));
-
-	//
-	// Fill report with the next cached touches
-	//
-	RmiFillNextPuckHidReportFromCache(
-		HidReport,
-		&ControllerContext->PuckCache,
-		&ControllerContext->Props,
-		&ControllerContext->PucksReported,
-		ControllerContext->PucksTotal);
-
-	//
-	// Update the caller if we still have outstanding touches to report
-	//
-	if (ControllerContext->PucksReported < ControllerContext->PucksTotal)
-	{
-		*PuckdingPucks = TRUE;
-	}
-	else
-	{
-		*PuckdingPucks = FALSE;
-	}
-
-exit:
-
-	return status;
-}
 
 VOID
 RmiUpdateLocalPenCache(
@@ -460,7 +169,7 @@ Return Value:
 
 VOID
 RmiFillNextPenHidReportFromCache(
-	IN PPTP_DEVICE_STYLUS_REPORT HidReport,
+	IN PHID_PEN_REPORT HidReport,
 	IN RMI4_PEN_CACHE* Cache,
 	IN PTOUCH_SCREEN_PROPERTIES Props,
 	IN int* PensReported,
@@ -496,8 +205,6 @@ Return Value:
 	int fingersToReport = min(PensTotal - *PensReported, 1);
 	USHORT SctatchX = 0, ScratchY = 0;
 
-	HidReport->ReportID = REPORTID_STYLUS;
-
 	//
 	// There are only 16-bits for ScanTime, truncate it
 	//
@@ -521,17 +228,17 @@ Return Value:
 			&ScratchY,
 			Props);
 
-		HidReport->Contacts[0].X = SctatchX;
-		HidReport->Contacts[0].Y = ScratchY;
+		HidReport->X = SctatchX;
+		HidReport->Y = ScratchY;
 
 		if (Cache->PenSlot[currentlyReporting].fingerStatus)
 		{
-			HidReport->Contacts[0].InRange = 1;
-			HidReport->Contacts[0].TipSwitch = FINGER_STATUS;
+			HidReport->InRange = 1;
+			HidReport->TipSwitch = FINGER_STATUS;
 
 			if (Cache->PenSlot[currentlyReporting].fingerStatus == RMI4_PEN_STATE_PRESENT_WITH_ERASER)
 			{
-				HidReport->Contacts[0].Eraser = 1;
+				HidReport->Eraser = 1;
 			}
 		}
 
@@ -543,7 +250,7 @@ NTSTATUS
 RmiServicePenDataInterrupt(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
 	IN RMI4_DETECTED_OBJECTS data,
-	IN PPTP_DEVICE_STYLUS_REPORT HidReport,
+	IN PHID_PEN_REPORT HidReport,
 	IN UCHAR InputMode,
 	OUT BOOLEAN* PendingPens
 )
@@ -610,7 +317,7 @@ Return Value:
 		}
 	}
 
-	RtlZeroMemory(HidReport, sizeof(PTP_DEVICE_STYLUS_REPORT));
+	RtlZeroMemory(HidReport, sizeof(HID_PEN_REPORT));
 
 	//
 	// Fill report with the next cached touches
@@ -769,7 +476,7 @@ Return Value:
 
 VOID
 RmiFillNextHidReportFromCache(
-	IN PPTP_DEVICE_FINGER_REPORT HidReport,
+	IN PHID_TOUCH_REPORT HidReport,
 	IN RMI4_FINGER_CACHE *Cache,
 	IN PTOUCH_SCREEN_PROPERTIES Props,
 	IN int *TouchesReported,
@@ -804,8 +511,6 @@ Return Value:
 	int currentFingerIndex;
 	int fingersToReport = min(TouchesTotal - *TouchesReported, 2);
 	USHORT SctatchX = 0, ScratchY = 0;
-
-	HidReport->ReportID = REPORTID_FINGER;
 
 	//
 	// There are only 16-bits for ScanTime, truncate it
@@ -871,7 +576,7 @@ NTSTATUS
 RmiServiceTouchDataInterrupt(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
 	IN RMI4_DETECTED_OBJECTS data,
-	IN PPTP_DEVICE_FINGER_REPORT HidReport,
+	IN PHID_TOUCH_REPORT HidReport,
 	IN UCHAR InputMode,
 	OUT BOOLEAN* PendingTouches
 )
@@ -938,7 +643,7 @@ Return Value:
 		}
 	}
 
-	RtlZeroMemory(HidReport, sizeof(PTP_DEVICE_FINGER_REPORT));
+	RtlZeroMemory(HidReport, sizeof(HID_TOUCH_REPORT));
 
 	//
 	// Fill report with the next cached touches
@@ -970,7 +675,7 @@ exit:
 NTSTATUS
 RmiServiceWakeUpInterrupt(
 	IN RMI4_CONTROLLER_CONTEXT* ControllerContext,
-	IN PPTP_DEVICE_WAKE_BUTTON_REPORT HidReport,
+	IN PHID_KEY_REPORT HidReport,
 	IN UCHAR InputMode,
 	OUT BOOLEAN* PendingEnable
 )
@@ -1006,9 +711,7 @@ Return Value:
 	NT_ASSERT(PendingEnable != NULL);
 	*PendingEnable = FALSE;
 
-	RtlZeroMemory(HidReport, sizeof(PTP_DEVICE_WAKE_BUTTON_REPORT));
-
-	HidReport->ReportID = REPORTID_WAKEBUTTON;
+	RtlZeroMemory(HidReport, sizeof(HID_KEY_REPORT));
 
 	//
 	// There are only 16-bits for ScanTime, truncate it
@@ -1042,10 +745,29 @@ Return Value:
 }
 
 NTSTATUS
+RmiServiceButtonDataInterrupt(
+	IN RMI4_DETECTED_BUTTONS data,
+	IN PHID_KEY_REPORT HidReport
+)
+{
+	NTSTATUS status;
+	
+	status = STATUS_SUCCESS;
+
+	RtlZeroMemory(HidReport, sizeof(HID_KEY_REPORT));
+
+	HidReport->ACBack = data.ButtonStates[0];
+	HidReport->Start = data.ButtonStates[1];
+	HidReport->ACSearch = data.ButtonStates[2];
+
+	return status;
+}
+
+NTSTATUS
 TchServiceInterrupts(
 	IN VOID *ControllerContext,
 	IN SPB_CONTEXT *SpbContext,
-	IN PDEV_REPORT HidReport,
+	IN PHID_INPUT_REPORT HidReport,
 	IN UCHAR InputMode,
 	IN BOOLEAN *ServicingComplete
 )
@@ -1077,6 +799,7 @@ Return Value:
 	NTSTATUS status = STATUS_NO_DATA_DETECTED;
 	RMI4_CONTROLLER_CONTEXT* controller;
 	RMI4_DETECTED_OBJECTS data;
+	RMI4_DETECTED_BUTTONS data2;
 
 	controller = (RMI4_CONTROLLER_CONTEXT*) ControllerContext;
 
@@ -1089,6 +812,7 @@ Return Value:
 	WdfWaitLockAcquire(controller->ControllerLock, NULL);
 
 	RtlZeroMemory(&data, sizeof(data));
+	RtlZeroMemory(&data2, sizeof(data2));
 
 	//
 	// Check the interrupt source if no interrupts are pending processing
@@ -1117,21 +841,21 @@ Return Value:
 	// Driver only services 0D cap button and 2D touch messages currently
 	//
 	if (controller->InterruptStatus &
-		~(RMI4_INTERRUPT_BIT_0D_CAP_BUTTON | RMI4_INTERRUPT_BIT_2D_TOUCH))
+		~(RMI4_INTERRUPT_BIT_0D_CAP_BUTTON | RMI4_INTERRUPT_BIT_0D_CAP_BUTTON_REVERSED | RMI4_INTERRUPT_BIT_2D_TOUCH))
 	{
 		Trace(
 			TRACE_LEVEL_WARNING,
 			TRACE_INTERRUPT,
 			"Ignoring following interrupt flags - 0x%08lX",
 			controller->InterruptStatus &
-			~(RMI4_INTERRUPT_BIT_0D_CAP_BUTTON |
+			~(RMI4_INTERRUPT_BIT_0D_CAP_BUTTON | RMI4_INTERRUPT_BIT_0D_CAP_BUTTON_REVERSED |
 				RMI4_INTERRUPT_BIT_2D_TOUCH));
 
 		//
 		// Mask away flags we don't service
 		//
 		controller->InterruptStatus &=
-			(RMI4_INTERRUPT_BIT_0D_CAP_BUTTON |
+			(RMI4_INTERRUPT_BIT_0D_CAP_BUTTON | RMI4_INTERRUPT_BIT_0D_CAP_BUTTON_REVERSED |
 				RMI4_INTERRUPT_BIT_2D_TOUCH);
 	}
 
@@ -1143,7 +867,6 @@ Return Value:
 
 	BOOLEAN pendingTouches = FALSE;
 	BOOLEAN pendingPens = FALSE;
-	BOOLEAN pendingPucks = FALSE;
 	BOOLEAN pendingKeys = FALSE;
 
 	if (controller->TouchesReported == controller->TouchesTotal ||
@@ -1166,7 +889,7 @@ Return Value:
 				"No object data to report - 0x%08lX",
 				status);
 
-			goto exit;
+			goto otherInterrupts;
 		}
 	}
 
@@ -1177,9 +900,10 @@ Return Value:
 	{
 		if (controller->GesturesEnabled)
 		{
+			HidReport->ReportID = REPORTID_KEYPAD;
 			status = RmiServiceWakeUpInterrupt(
 				ControllerContext,
-				&(HidReport->WakeReport),
+				&(HidReport->KeyReport),
 				InputMode,
 				&pendingKeys);
 
@@ -1201,10 +925,11 @@ Return Value:
 			}
 		}
 
+		HidReport->ReportID = REPORTID_FINGER;
 		status = RmiServiceTouchDataInterrupt(
 			ControllerContext,
 			data,
-			&(HidReport->PtpReport),
+			&(HidReport->TouchReport),
 			InputMode,
 			&pendingTouches);
 
@@ -1225,7 +950,8 @@ Return Value:
 				status);
 		}
 
-		/*status = RmiServicePenDataInterrupt(
+		HidReport->ReportID = REPORTID_STYLUS;
+		status = RmiServicePenDataInterrupt(
 			ControllerContext,
 			data,
 			&(HidReport->PenReport),
@@ -1248,13 +974,41 @@ Return Value:
 				"Error processing pen event - 0x%08lX",
 				status);
 		}
+	}
 
-		status = RmiServicePuckDataInterrupt(
+otherInterrupts:
+
+	//
+	// Service a touch data event if indicated by hardware 
+	//
+	if (controller->InterruptStatus & RMI4_INTERRUPT_BIT_0D_CAP_BUTTON ||
+		controller->InterruptStatus & RMI4_INTERRUPT_BIT_0D_CAP_BUTTON_REVERSED)
+	{
+		//
+		// See if new button data is available
+		//
+		status = RmiGetObjectsFromControllerF1A(
 			ControllerContext,
-			data,
-			&(HidReport->PuckReport),
-			InputMode,
-			&pendingPucks);
+			SpbContext,
+			&data2,
+			controller->InterruptStatus & RMI4_INTERRUPT_BIT_0D_CAP_BUTTON_REVERSED
+		);
+
+		if (!NT_SUCCESS(status))
+		{
+			Trace(
+				TRACE_LEVEL_VERBOSE,
+				TRACE_SAMPLES,
+				"No button data to report - 0x%08lX",
+				status);
+
+			goto otherInterrupts2;
+		}
+
+		HidReport->ReportID = REPORTID_KEYPAD;
+		status = RmiServiceButtonDataInterrupt(
+			data2,
+			&(HidReport->KeyReport));
 
 		//
 		// Success indicates the report is ready to be sent, otherwise,
@@ -1262,30 +1016,38 @@ Return Value:
 		//
 		if (NT_SUCCESS(status))
 		{
-			goto exit2D;
+			controller->InterruptStatus &= ~RMI4_INTERRUPT_BIT_0D_CAP_BUTTON;
+			controller->InterruptStatus &= ~RMI4_INTERRUPT_BIT_0D_CAP_BUTTON_REVERSED;
 		}
 		else
 		{
 			Trace(
 				TRACE_LEVEL_ERROR,
 				TRACE_INTERRUPT,
-				"Error processing puck event - 0x%08lX",
+				"Error processing button event - 0x%08lX",
 				status);
-		}*/
+		}
 	}
 
-exit2D:
-	//
-	// If there are more touches to report, servicing is incomplete
-	//
-	if (pendingTouches == FALSE && pendingPens == FALSE && pendingPucks == FALSE && pendingKeys == FALSE)
-	{
-		controller->InterruptStatus &= ~RMI4_INTERRUPT_BIT_2D_TOUCH;
-	}
+otherInterrupts2:
 
 	//
 	// Add servicing for additional touch interrupts here
 	//
+
+	goto exit;
+
+exit2D:
+
+	//
+	// If there are more touches to report, servicing is incomplete
+	//
+	if (pendingTouches == FALSE && pendingPens == FALSE && pendingKeys == FALSE)
+	{
+		controller->InterruptStatus &= ~RMI4_INTERRUPT_BIT_2D_TOUCH;
+	}
+
+	goto exit;
 
 exit:
 

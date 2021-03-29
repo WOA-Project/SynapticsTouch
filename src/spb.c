@@ -1,6 +1,7 @@
 /*++
-    Copyright (c) Microsoft Corporation. All Rights Reserved. 
-    Sample code. Dealpoint ID #843729.
+    Copyright (c) Microsoft Corporation. All Rights Reserved.
+    Copyright (c) Bingxing Wang. All Rights Reserved.
+    Copyright (c) LumiaWoA authors. All Rights Reserved.
 
     Module Name:
 
@@ -18,22 +19,20 @@
 
 --*/
 
-#include <compat.h>
 #include <internal.h>
 #include <controller.h>
+#include "spb.h"
 #include <spb.tmh>
-
-#define I2C_VERBOSE_LOGGING 0
 
 NTSTATUS
 SpbDoWriteDataSynchronously(
-    IN SPB_CONTEXT *SpbContext,
+    IN SPB_CONTEXT* SpbContext,
     IN UCHAR Address,
     IN PVOID Data,
     IN ULONG Length
-    )
+)
 /*++
- 
+
   Routine Description:
 
     This helper routine abstracts creating and sending an I/O
@@ -41,7 +40,7 @@ SpbDoWriteDataSynchronously(
 
   Arguments:
 
-    SpbContext - Pointer to the current device context 
+    SpbContext - Pointer to the current device context
     Address    - The I2C register address to write to
     Data       - A buffer to receive the data at at the above address
     Length     - The amount of data to be read from the above address
@@ -69,7 +68,7 @@ SpbDoWriteDataSynchronously(
     {
         status = WdfMemoryCreate(
             WDF_NO_OBJECT_ATTRIBUTES,
-            NonPagedPoolNx,
+            NonPagedPool,
             TOUCH_POOL_TAG,
             length,
             &memory,
@@ -92,11 +91,11 @@ SpbDoWriteDataSynchronously(
     }
     else
     {
-        buffer = (PUCHAR) WdfMemoryGetBuffer(SpbContext->WriteMemory, NULL);
+        buffer = (PUCHAR)WdfMemoryGetBuffer(SpbContext->WriteMemory, NULL);
 
         WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(
             &memoryDescriptor,
-            (PVOID) buffer,
+            (PVOID)buffer,
             length);
     }
 
@@ -108,17 +107,7 @@ SpbDoWriteDataSynchronously(
     //
     // Address is followed by the data payload
     //
-    RtlCopyMemory((buffer+sizeof(Address)), Data, length-sizeof(Address));
-
-#if I2C_VERBOSE_LOGGING
-    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "I2CWRITE: LENGTH=%d", length);
-    for (ULONG j = 0; j < length; j++)
-    {
-        UCHAR byte = *(buffer + j);
-        DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, " %02hhX", byte);
-    }
-    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "\n");
-#endif
+    RtlCopyMemory((buffer + sizeof(Address)), Data, length - sizeof(Address));
 
     status = WdfIoTargetSendWriteSynchronously(
         SpbContext->SpbIoTarget,
@@ -150,13 +139,13 @@ exit:
 
 NTSTATUS
 SpbWriteDataSynchronously(
-    IN SPB_CONTEXT *SpbContext,
+    IN SPB_CONTEXT* SpbContext,
     IN UCHAR Address,
     IN PVOID Data,
     IN ULONG Length
-    )
+)
 /*++
- 
+
   Routine Description:
 
     This routine abstracts creating and sending an I/O
@@ -165,7 +154,7 @@ SpbWriteDataSynchronously(
 
   Arguments:
 
-    SpbContext - Pointer to the current device context 
+    SpbContext - Pointer to the current device context
     Address    - The I2C register address to write to
     Data       - A buffer to receive the data at at the above address
     Length     - The amount of data to be read from the above address
@@ -181,9 +170,9 @@ SpbWriteDataSynchronously(
     WdfWaitLockAcquire(SpbContext->SpbLock, NULL);
 
     status = SpbDoWriteDataSynchronously(
-        SpbContext, 
-        Address, 
-        Data, 
+        SpbContext,
+        Address,
+        Data,
         Length);
 
     WdfWaitLockRelease(SpbContext->SpbLock);
@@ -191,15 +180,15 @@ SpbWriteDataSynchronously(
     return status;
 }
 
-NTSTATUS 
+NTSTATUS
 SpbReadDataSynchronously(
-    _In_ SPB_CONTEXT *SpbContext,
-    _In_ UCHAR Address,
+    IN SPB_CONTEXT* SpbContext,
+    IN UCHAR Address,
     _In_reads_bytes_(Length) PVOID Data,
-    _In_ ULONG Length
-    )
+    IN ULONG Length
+)
 /*++
- 
+
   Routine Description:
 
     This helper routine abstracts creating and sending an I/O
@@ -207,7 +196,7 @@ SpbReadDataSynchronously(
 
   Arguments:
 
-    SpbContext - Pointer to the current device context 
+    SpbContext - Pointer to the current device context
     Address    - The I2C register address to read from
     Data       - A buffer to receive the data at at the above address
     Length     - The amount of data to be read from the above address
@@ -253,7 +242,7 @@ SpbReadDataSynchronously(
     {
         status = WdfMemoryCreate(
             WDF_NO_OBJECT_ATTRIBUTES,
-            NonPagedPoolNx,
+            NonPagedPool,
             TOUCH_POOL_TAG,
             Length,
             &memory,
@@ -276,13 +265,14 @@ SpbReadDataSynchronously(
     }
     else
     {
-        buffer = (PUCHAR) WdfMemoryGetBuffer(SpbContext->ReadMemory, NULL);
+        buffer = (PUCHAR)WdfMemoryGetBuffer(SpbContext->ReadMemory, NULL);
 
         WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(
             &memoryDescriptor,
-            (PVOID) buffer,
+            (PVOID)buffer,
             Length);
     }
+
 
     status = WdfIoTargetSendReadSynchronously(
         SpbContext->SpbIoTarget,
@@ -292,7 +282,7 @@ SpbReadDataSynchronously(
         NULL,
         &bytesRead);
 
-    if (!NT_SUCCESS(status) || 
+    if (!NT_SUCCESS(status) ||
         bytesRead != Length)
     {
         Trace(
@@ -303,16 +293,6 @@ SpbReadDataSynchronously(
         goto exit;
     }
 
-#if I2C_VERBOSE_LOGGING
-    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "I2CREAD: LENGTH=%d", Length);
-    for (ULONG j = 0; j < Length; j++)
-    {
-        UCHAR byte = *(buffer + j);
-        DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, " %02hhX", byte);
-    }
-    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "\n");
-#endif
-
     //
     // Copy back to the caller's buffer
     //
@@ -321,31 +301,31 @@ SpbReadDataSynchronously(
 exit:
     if (NULL != memory)
     {
-       WdfObjectDelete(memory);
+        WdfObjectDelete(memory);
     }
 
     WdfWaitLockRelease(SpbContext->SpbLock);
-   
+
     return status;
 }
 
 VOID
 SpbTargetDeinitialize(
     IN WDFDEVICE FxDevice,
-    IN SPB_CONTEXT *SpbContext
-    )
+    IN SPB_CONTEXT* SpbContext
+)
 /*++
- 
+
   Routine Description:
 
     This helper routine is used to free any members added to the SPB_CONTEXT,
     note the SPB I/O target is parented to the device and will be
     closed and free'd when the device is removed.
- 
+
   Arguments:
 
     FxDevice   - Handle to the framework device object
-    SpbContext - Pointer to the current device context 
+    SpbContext - Pointer to the current device context
 
   Return Value:
 
@@ -355,7 +335,7 @@ SpbTargetDeinitialize(
 {
     UNREFERENCED_PARAMETER(FxDevice);
     UNREFERENCED_PARAMETER(SpbContext);
-    
+
     //
     // Free any SPB_CONTEXT allocations here
     //
@@ -378,20 +358,20 @@ SpbTargetDeinitialize(
 NTSTATUS
 SpbTargetInitialize(
     IN WDFDEVICE FxDevice,
-    IN SPB_CONTEXT *SpbContext
-    )
+    IN SPB_CONTEXT* SpbContext
+)
 /*++
- 
+
   Routine Description:
 
-    This helper routine opens the Spb I/O target and 
+    This helper routine opens the Spb I/O target and
     initializes a request object used for the lifetime
     of communication between this driver and Spb.
 
   Arguments:
 
     FxDevice   - Handle to the framework device object
-    SpbContext - Pointer to the current device context 
+    SpbContext - Pointer to the current device context
 
   Return Value:
 
@@ -404,7 +384,7 @@ SpbTargetInitialize(
     UNICODE_STRING spbDeviceName;
     WCHAR spbDeviceNameBuffer[RESOURCE_HUB_PATH_SIZE];
     NTSTATUS status;
-    
+
     WDF_OBJECT_ATTRIBUTES_INIT(&objectAttributes);
     objectAttributes.ParentObject = FxDevice;
 
@@ -412,8 +392,8 @@ SpbTargetInitialize(
         FxDevice,
         &objectAttributes,
         &SpbContext->SpbIoTarget);
-    
-    if (!NT_SUCCESS(status)) 
+
+    if (!NT_SUCCESS(status))
     {
         Trace(
             TRACE_LEVEL_ERROR,
@@ -467,12 +447,12 @@ SpbTargetInitialize(
     }
 
     //
-    // Allocate some fixed-size buffers from NonPagedPoolNx for typical
+    // Allocate some fixed-size buffers from NonPagedPool for typical
     // Spb transaction sizes to avoid pool fragmentation in most cases
     //
     status = WdfMemoryCreate(
         WDF_NO_OBJECT_ATTRIBUTES,
-        NonPagedPoolNx,
+        NonPagedPool,
         TOUCH_POOL_TAG,
         DEFAULT_SPB_BUFFER_SIZE,
         &SpbContext->WriteMemory,
@@ -490,7 +470,7 @@ SpbTargetInitialize(
 
     status = WdfMemoryCreate(
         WDF_NO_OBJECT_ATTRIBUTES,
-        NonPagedPoolNx,
+        NonPagedPool,
         TOUCH_POOL_TAG,
         DEFAULT_SPB_BUFFER_SIZE,
         &SpbContext->ReadMemory,
